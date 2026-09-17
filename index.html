@@ -6,8 +6,10 @@
 <script>(function(){try{
   var t=localStorage.getItem('cardtool-theme');
   if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t);
+  var l=localStorage.getItem('cardtool-lang');
+  if(l==='en') document.documentElement.lang='en';
 }catch(e){}})();</script>
-<title>ฟอร์มจัดรูปลงกระดาษพิมพ์</title>
+<title data-i18n="appTitle">ฟอร์มจัดรูปลงกระดาษพิมพ์</title>
 <style>
   :root{
     --canvas:#DCE1E7; --surface:#FFFFFF; --line:#D3D8DF; --line2:#E7EAEF;
@@ -220,119 +222,119 @@
     <div id="sidehead">
       <div class="headrow">
         <div class="headtxt">
-          <h1>ฟอร์มจัดรูปลงกระดาษพิมพ์</h1>
-          <p>จัดรูปลงกระดาษ 4×6 นิ้ว หรือ A4 แล้วบันทึกเป็น JPG / PDF</p>
+          <h1 data-i18n="appTitle">ฟอร์มจัดรูปลงกระดาษพิมพ์</h1>
+          <p data-i18n="appSubtitle">จัดรูปลงกระดาษ 4×6 นิ้ว หรือ A4 แล้วบันทึกเป็น JPG / PDF</p>
         </div>
-        <button class="icon" id="closeside" title="ซ่อนแถบเครื่องมือ" aria-label="ซ่อนแถบเครื่องมือ">‹</button>
+        <button class="icon" id="closeside" data-i18n-title="hideSidebar" title="ซ่อนแถบเครื่องมือ" aria-label="ซ่อนแถบเครื่องมือ">‹</button>
       </div>
     </div>
 
     <div id="sidebody">
       <details class="sec" open>
-        <summary>ขนาดและกระดาษ <span class="n" id="layoutinfo"></span></summary>
+        <summary><span data-i18n="secSizePaper">ขนาดและกระดาษ</span> <span class="n" id="layoutinfo"></span></summary>
         <div class="secbody">
           <div class="grid2">
-            <label class="field"><span>ขนาดรูป</span>
+            <label class="field"><span data-i18n="lblPhotoSize">ขนาดรูป</span>
               <select id="size">
-                <option value="card" selected>การ์ด — 54 × 85.6</option>
-                <option value="full">การ์ดเต็มกรอบ — 64 × 102</option>
-                <option value="halfa5">รูปครึ่ง A5 — 99 × 130</option>
-                <option value="strip">รูปยาว (ตู้สติ๊กเกอร์) — 61 × 205</option>
-                <option value="a5">รูปขนาด A5 — 130 × 204</option>
+                <option value="card" selected data-i18n="optSizeCard">การ์ด — 54 × 85.6</option>
+                <option value="full" data-i18n="optSizeFull">การ์ดเต็มกรอบ — 64 × 102</option>
+                <option value="halfa5" data-i18n="optSizeHalfA5">รูปครึ่ง A5 — 99 × 130</option>
+                <option value="strip" data-i18n="optSizeStrip">รูปยาว (ตู้สติ๊กเกอร์) — 61 × 205</option>
+                <option value="a5" data-i18n="optSizeA5">รูปขนาด A5 — 130 × 204</option>
               </select>
             </label>
-            <label class="field"><span>แนวรูป</span>
+            <label class="field"><span data-i18n="lblOrientation">แนวรูป</span>
               <select id="ori">
-                <option value="p" selected>แนวตั้ง</option>
-                <option value="l">แนวนอน</option>
+                <option value="p" selected data-i18n="optPortrait">แนวตั้ง</option>
+                <option value="l" data-i18n="optLandscape">แนวนอน</option>
               </select>
             </label>
-            <label class="field"><span>กระดาษ</span>
+            <label class="field"><span data-i18n="lblPaper">กระดาษ</span>
               <select id="paper">
-                <option value="p46" selected>4×6 นิ้ว แนวนอน</option>
-                <option value="a4">A4 แนวตั้ง</option>
+                <option value="p46" selected data-i18n="optPaper46">4×6 นิ้ว แนวนอน</option>
+                <option value="a4" data-i18n="optPaperA4">A4 แนวตั้ง</option>
               </select>
             </label>
-            <label class="field"><span>จำนวนใบต่อรูป</span>
+            <label class="field"><span data-i18n="lblPerPhoto">จำนวนใบต่อรูป</span>
               <select id="per">
-                <option value="1" selected>รูปละ 1 ใบ</option>
-                <option value="2">รูปละ 2 ใบ</option>
-                <option value="4">รูปละ 4 ใบ</option>
-                <option value="9">รูปละ 9 ใบ</option>
+                <option value="1" selected data-i18n="optPer1">รูปละ 1 ใบ</option>
+                <option value="2" data-i18n="optPer2">รูปละ 2 ใบ</option>
+                <option value="4" data-i18n="optPer4">รูปละ 4 ใบ</option>
+                <option value="9" data-i18n="optPer9">รูปละ 9 ใบ</option>
               </select>
             </label>
           </div>
           <div class="info" id="notice" hidden></div>
           <div class="toggles">
-            <label class="chk"><input type="checkbox" id="marks" checked> เส้นตัด</label>
-            <label class="chk"><input type="checkbox" id="corners" checked> มุมกระดาษ</label>
-            <label class="chk"><input type="checkbox" id="round"> มุมมน</label>
+            <label class="chk"><input type="checkbox" id="marks" checked> <span data-i18n="chkMarks">เส้นตัด</span></label>
+            <label class="chk"><input type="checkbox" id="corners" checked> <span data-i18n="chkCorners">มุมกระดาษ</span></label>
+            <label class="chk"><input type="checkbox" id="round"> <span data-i18n="chkRound">มุมมน</span></label>
           </div>
         </div>
       </details>
 
       <details class="sec" open>
-        <summary>รูปภาพ <span class="n" id="count">ยังไม่มีรูป</span></summary>
+        <summary><span data-i18n="secPhotos">รูปภาพ</span> <span class="n" id="count" data-i18n="noPhotos">ยังไม่มีรูป</span></summary>
         <div class="secbody">
           <label class="drop-zone" id="dz" for="fin">
-            <b>ลากรูปมาวางตรงนี้</b>ใส่พร้อมกันหลายไฟล์ได้ หรือคลิกเพื่อเลือก
+            <b data-i18n="dzTitle">ลากรูปมาวางตรงนี้</b><span data-i18n="dzSubtitle">ใส่พร้อมกันหลายไฟล์ได้ หรือคลิกเพื่อเลือก</span>
           </label>
           <input type="file" id="fin" accept="image/*" multiple>
           <div class="strip" id="strip"></div>
-          <div class="row"><button class="mini" id="clear">ล้างรูปทั้งหมด</button></div>
+          <div class="row"><button class="mini" id="clear" data-i18n="btnClearAll">ล้างรูปทั้งหมด</button></div>
         </div>
       </details>
 
       <details class="sec" open>
-        <summary>ปรับแต่งรูป <span class="n" id="selname">ยังไม่ได้เลือก</span></summary>
+        <summary><span data-i18n="secEditPhoto">ปรับแต่งรูป</span> <span class="n" id="selname" data-i18n="noSelection">ยังไม่ได้เลือก</span></summary>
         <div class="secbody editor off" id="editor">
-          <div class="tip" id="tip" hidden>สัดส่วนรูปไม่ตรงกับกรอบ — ลองหมุน 90° หรือกด “เห็นทั้งรูป”</div>
+          <div class="tip" id="tip" hidden data-i18n="tipRatioMismatch">สัดส่วนรูปไม่ตรงกับกรอบ — ลองหมุน 90° หรือกด “เห็นทั้งรูป”</div>
           <div class="row">
-            <label class="lbl">หมุน</label>
-            <button class="mini" data-act="rot" data-dir="-90">↺ ซ้าย</button>
-            <button class="mini" data-act="rot" data-dir="90">↻ ขวา</button>
+            <label class="lbl" data-i18n="lblRotate">หมุน</label>
+            <button class="mini" data-act="rot" data-dir="-90" data-i18n="btnRotL">↺ ซ้าย</button>
+            <button class="mini" data-act="rot" data-dir="90" data-i18n="btnRotR">↻ ขวา</button>
             <span class="val" id="rv">0°</span>
           </div>
           <div class="row">
-            <label class="lbl" for="z">ซูม</label>
+            <label class="lbl" for="z" data-i18n="lblZoom">ซูม</label>
             <input type="range" id="z" min="30" max="320" value="100">
             <span class="val" id="zv">100%</span>
           </div>
           <div class="row">
-            <label class="lbl">ขนาด</label>
-            <button class="mini" data-act="fill">เต็มกรอบ</button>
-            <button class="mini" data-act="fit">เห็นทั้งรูป</button>
-            <button class="mini" data-act="center">จัดกลาง</button>
+            <label class="lbl" data-i18n="lblSizeAction">ขนาด</label>
+            <button class="mini" data-act="fill" data-i18n="btnFill">เต็มกรอบ</button>
+            <button class="mini" data-act="fit" data-i18n="btnFit">เห็นทั้งรูป</button>
+            <button class="mini" data-act="center" data-i18n="btnCenter">จัดกลาง</button>
           </div>
-          <div class="row"><button class="mini" data-act="applyall">ใช้ค่านี้กับทุกรูป</button></div>
+          <div class="row"><button class="mini" data-act="applyall" data-i18n="btnApplyAll">ใช้ค่านี้กับทุกรูป</button></div>
         </div>
       </details>
 
       <details class="sec" open>
-        <summary>บันทึก / พิมพ์</summary>
+        <summary data-i18n="secSavePrint">บันทึก / พิมพ์</summary>
         <div class="secbody">
-          <label class="field"><span>ความละเอียด</span>
+          <label class="field"><span data-i18n="lblResolution">ความละเอียด</span>
             <select id="dpi">
-              <option value="300" selected>300 dpi — มาตรฐานงานพิมพ์</option>
-              <option value="600">600 dpi — สูงสุด ไฟล์ใหญ่</option>
+              <option value="300" selected data-i18n="optDpi300">300 dpi — มาตรฐานงานพิมพ์</option>
+              <option value="600" data-i18n="optDpi600">600 dpi — สูงสุด ไฟล์ใหญ่</option>
             </select>
           </label>
           <div class="actions">
-            <button class="go" id="saveJpgAll">JPG ทุกแผ่น</button>
-            <button class="go" id="savePdf">PDF รวมทุกแผ่น</button>
+            <button class="go" id="saveJpgAll" data-i18n="btnJpgAll">JPG ทุกแผ่น</button>
+            <button class="go" id="savePdf" data-i18n="btnPdfAll">PDF รวมทุกแผ่น</button>
           </div>
           <div class="actions">
-            <button class="ghost" id="saveJpgOne">JPG เฉพาะแผ่นนี้</button>
-            <button class="ghost" id="print">พิมพ์</button>
+            <button class="ghost" id="saveJpgOne" data-i18n="btnJpgOne">JPG เฉพาะแผ่นนี้</button>
+            <button class="ghost" id="print" data-i18n="btnPrint">พิมพ์</button>
           </div>
         </div>
       </details>
 
       <details class="sec">
-        <summary>วิธีตั้งค่าเครื่องพิมพ์</summary>
+        <summary data-i18n="secPrinterHelp">วิธีตั้งค่าเครื่องพิมพ์</summary>
         <div class="secbody">
-          <div class="tip"><strong>ปิด Borderless / ไร้ขอบ เสมอ</strong> — โหมดไร้ขอบขยายภาพ 2–3% ทำให้ขนาดที่ตัดออกมาไม่ตรง</div>
-          <div class="notes">
+          <div class="tip" data-i18n-html="tipBorderless"><strong>ปิด Borderless / ไร้ขอบ เสมอ</strong> — โหมดไร้ขอบขยายภาพ 2–3% ทำให้ขนาดที่ตัดออกมาไม่ตรง</div>
+          <div class="notes" data-i18n-html="notesBlock">
             <strong>พิมพ์จากไฟล์ PDF — ง่ายที่สุด</strong>
             <ul><li>หน้า PDF เป็นขนาดกระดาษจริงมาแล้ว เลือกกระดาษให้ตรงแล้วกดพิมพ์ ไม่ต้องยุ่งกับสเกล</li></ul>
             <hr class="divider">
@@ -368,20 +370,21 @@
 
   <main id="main">
     <div id="topbar">
-      <button class="icon" id="toggle" title="ซ่อน/แสดงแถบเครื่องมือ" aria-label="ซ่อนหรือแสดงแถบเครื่องมือ">☰</button>
-      <button class="icon" id="prev" title="แผ่นก่อนหน้า">‹</button>
+      <button class="icon" id="toggle" data-i18n-title="toggleSidebar" title="ซ่อน/แสดงแถบเครื่องมือ" aria-label="ซ่อนหรือแสดงแถบเครื่องมือ">☰</button>
+      <button class="icon" id="prev" data-i18n-title="prevSheet" title="แผ่นก่อนหน้า">‹</button>
       <span class="pagelbl" id="pglabel">แผ่น 1 / 1</span>
-      <button class="icon" id="next" title="แผ่นถัดไป">›</button>
+      <button class="icon" id="next" data-i18n-title="nextSheet" title="แผ่นถัดไป">›</button>
       <span class="sp"></span>
       <div class="zoomgrp">
-        <button class="icon" id="zout" title="ซูมออก">−</button>
+        <button class="icon" id="zout" data-i18n-title="zoomOut" title="ซูมออก">−</button>
         <span class="zoomval" id="zlabel">100%</span>
-        <button class="icon" id="zin" title="ซูมเข้า">+</button>
-        <button class="mini" id="zfit">พอดีจอ</button>
+        <button class="icon" id="zin" data-i18n-title="zoomIn" title="ซูมเข้า">+</button>
+        <button class="mini" id="zfit" data-i18n="btnFitScreen">พอดีจอ</button>
       </div>
-      <button class="icon" id="themeToggle" title="สลับธีมสว่าง/มืด" aria-label="สลับธีมสว่างหรือมืด">
+      <button class="icon" id="themeToggle" data-i18n-title="themeToggleTitle" title="สลับธีมสว่าง/มืด" aria-label="สลับธีมสว่างหรือมืด">
         <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
       </button>
+      <button class="icon" id="langToggle" data-i18n-title="langToggleTitle" title="สลับภาษา / Switch language" aria-label="สลับภาษา / Switch language" style="font-size:12px;font-weight:700">TH</button>
     </div>
     <div id="view"><div id="sizer"><div id="scaler"><div id="stack"></div></div></div></div>
     <div id="statusbar"></div>
@@ -392,6 +395,177 @@
 (function(){
   var GAP=2, MINM=5, JPEG_Q=0.98;
   function el(id){return document.getElementById(id)}
+
+  // ---------- ภาษา (TH/EN) ----------
+  var LANG_KEY='cardtool-lang';
+  var LANG=(function(){ try{ return localStorage.getItem(LANG_KEY)==='en'?'en':'th' }catch(e){ return 'th' } })();
+  var I18N={
+    th:{
+      appTitle:'ฟอร์มจัดรูปลงกระดาษพิมพ์',
+      appSubtitle:'จัดรูปลงกระดาษ 4×6 นิ้ว หรือ A4 แล้วบันทึกเป็น JPG / PDF',
+      hideSidebar:'ซ่อนแถบเครื่องมือ',
+      secSizePaper:'ขนาดและกระดาษ', lblPhotoSize:'ขนาดรูป',
+      optSizeCard:'การ์ด — 54 × 85.6', optSizeFull:'การ์ดเต็มกรอบ — 64 × 102',
+      optSizeHalfA5:'รูปครึ่ง A5 — 99 × 130', optSizeStrip:'รูปยาว (ตู้สติ๊กเกอร์) — 61 × 205',
+      optSizeA5:'รูปขนาด A5 — 130 × 204',
+      lblOrientation:'แนวรูป', optPortrait:'แนวตั้ง', optLandscape:'แนวนอน',
+      lblPaper:'กระดาษ', optPaper46:'4×6 นิ้ว แนวนอน', optPaperA4:'A4 แนวตั้ง',
+      lblPerPhoto:'จำนวนใบต่อรูป', optPer1:'รูปละ 1 ใบ', optPer2:'รูปละ 2 ใบ',
+      optPer4:'รูปละ 4 ใบ', optPer9:'รูปละ 9 ใบ',
+      chkMarks:'เส้นตัด', chkCorners:'มุมกระดาษ', chkRound:'มุมมน',
+      secPhotos:'รูปภาพ', noPhotos:'ยังไม่มีรูป',
+      dzTitle:'ลากรูปมาวางตรงนี้', dzSubtitle:'ใส่พร้อมกันหลายไฟล์ได้ หรือคลิกเพื่อเลือก',
+      btnClearAll:'ล้างรูปทั้งหมด',
+      secEditPhoto:'ปรับแต่งรูป', noSelection:'ยังไม่ได้เลือก',
+      tipRatioMismatch:'สัดส่วนรูปไม่ตรงกับกรอบ — ลองหมุน 90° หรือกด “เห็นทั้งรูป”',
+      lblRotate:'หมุน', btnRotL:'↺ ซ้าย', btnRotR:'↻ ขวา', lblZoom:'ซูม',
+      lblSizeAction:'ขนาด', btnFill:'เต็มกรอบ', btnFit:'เห็นทั้งรูป', btnCenter:'จัดกลาง',
+      btnApplyAll:'ใช้ค่านี้กับทุกรูป',
+      secSavePrint:'บันทึก / พิมพ์', lblResolution:'ความละเอียด',
+      optDpi300:'300 dpi — มาตรฐานงานพิมพ์', optDpi600:'600 dpi — สูงสุด ไฟล์ใหญ่',
+      btnJpgAll:'JPG ทุกแผ่น', btnPdfAll:'PDF รวมทุกแผ่น',
+      btnJpgOne:'JPG เฉพาะแผ่นนี้', btnPrint:'พิมพ์',
+      secPrinterHelp:'วิธีตั้งค่าเครื่องพิมพ์',
+      tipBorderless:'<strong>ปิด Borderless / ไร้ขอบ เสมอ</strong> — โหมดไร้ขอบขยายภาพ 2–3% ทำให้ขนาดที่ตัดออกมาไม่ตรง',
+      notesBlock:
+        '<strong>พิมพ์จากไฟล์ PDF — ง่ายที่สุด</strong>'+
+        '<ul><li>หน้า PDF เป็นขนาดกระดาษจริงมาแล้ว เลือกกระดาษให้ตรงแล้วกดพิมพ์ ไม่ต้องยุ่งกับสเกล</li></ul>'+
+        '<hr class="divider">'+
+        '<strong>พิมพ์จากไฟล์ JPG</strong>'+
+        '<ul><li>Fit to page — <span class="yes">ใช้ได้</span> สัดส่วนรูปตรงกับกระดาษพอดี</li>'+
+        '<li>Borderless และ Zoom to fill — <span class="no">ปิด</span></li></ul>'+
+        '<hr class="divider">'+
+        '<strong>พิมพ์จากหน้านี้โดยตรง</strong>'+
+        '<ul><li>สเกล <strong>100%</strong> — <span class="no">ห้าม</span> Fit to page</li>'+
+        '<li>Margins: <strong>None</strong> · Headers and footers: <span class="no">ปิด</span></li></ul>'+
+        '<hr class="divider">'+
+        '<strong>ส่งร้านอัดรูป</strong>'+
+        '<ul><li>บอกว่าอัดเต็มขนาด ไม่ตัดขอบ — เครื่องหมายมุมทั้ง 4 คือตัวเช็ก ถ้ามุมหายแปลว่าร้านตัดขอบ</li></ul>'+
+        '<hr class="divider">'+
+        '<strong>คุณภาพไฟล์</strong>'+
+        '<ul><li>รูปต้นฉบับไม่ถูกย่อและไม่ถูกบีบซ้ำ การหมุนคำนวณตอนวาดภาพ</li>'+
+        '<li>PDF ฝัง JPG ชุดเดียวกับที่บันทึกออกมา · JPG หลายแผ่นรวมเป็น ZIP แบบไม่บีบอัด</li></ul>',
+      toggleSidebar:'ซ่อน/แสดงแถบเครื่องมือ', prevSheet:'แผ่นก่อนหน้า', nextSheet:'แผ่นถัดไป',
+      zoomOut:'ซูมออก', zoomIn:'ซูมเข้า', btnFitScreen:'พอดีจอ',
+      themeToggleTitle:'สลับธีมสว่าง/มืด', langToggleTitle:'สลับภาษา / Switch language',
+      btnRemove:'เอาออก', paperName46:'4×6 นิ้ว', paperNameA4:'A4',
+      pageLabel:function(cur,total){ return 'แผ่น '+cur+' / '+total },
+      layoutInfo:function(cw,ch,paperName,n){ return cw+'×'+ch+' · '+paperName+' · '+n+' ใบ/แผ่น' },
+      countWithPhotos:function(n,sheets){ return n+' รูป · '+sheets+' แผ่น' },
+      photoLabel:function(idx,name){ return 'รูปที่ '+idx+' · '+name },
+      noticeRotate:function(ori){ return 'หมุนรูปเป็นแนว'+(ori==='p'?'นอน':'ตั้ง')+'ให้ เพราะแนวเดิมใส่กระดาษนี้ไม่ได้' },
+      noticeSwitchA4:'ขนาดนี้ใส่กระดาษ 4×6 นิ้วไม่ได้ (ใหญ่เกิน) สลับเป็น A4 ให้แล้ว',
+      noticeSwitchA4Rotate:'ขนาดนี้ใส่กระดาษ 4×6 นิ้วไม่ได้ สลับเป็น A4 และหมุนแนวรูปให้แล้ว',
+      noImageFiles:'ไม่พบไฟล์รูปภาพ',
+      readingFiles:function(n){ return 'กำลังอ่านรูป '+n+' ไฟล์…' },
+      addedSummary:function(n,sheets){ return n+' รูป · '+sheets+' แผ่น — คลิกรูปในกระดาษเพื่อเลือก แล้วลากเลื่อนได้' },
+      appliedToAll:'ใช้ค่าการหมุน ซูม และตำแหน่ง กับทุกรูปแล้ว',
+      creatingFile:'กำลังสร้างไฟล์…',
+      savedSheet:function(n){ return 'บันทึกแผ่นที่ '+n+' แล้ว' },
+      cancelledSave:'ยกเลิกการบันทึก', saveFailed:'บันทึกไม่สำเร็จ',
+      creatingSheet:function(i,n){ return 'กำลังสร้างแผ่น '+i+' / '+n+'…' },
+      savedJpg:function(w,h){ return 'บันทึก JPG แล้ว ('+w+' × '+h+' px)' },
+      savedZip:function(n){ return 'บันทึก ZIP แล้ว — ข้างในมี JPG '+n+' แผ่น' },
+      mergingPdf:'กำลังรวมเป็น PDF…',
+      savedPdf:function(n,paperName){ return 'บันทึก PDF แล้ว — '+n+' หน้า ขนาด '+paperName },
+      pdfFailed:'สร้าง PDF ไม่สำเร็จ',
+      needPhotosFirst:'ยังไม่มีรูป — ใส่รูปก่อน',
+      bootHint:'เริ่มจากลากรูปมาวางในแถบซ้าย'
+    },
+    en:{
+      appTitle:'Photo Print Layout Tool',
+      appSubtitle:'Lay out photos on 4×6in or A4 paper, then save as JPG / PDF',
+      hideSidebar:'Hide sidebar',
+      secSizePaper:'Size & Paper', lblPhotoSize:'Photo size',
+      optSizeCard:'Card — 54 × 85.6', optSizeFull:'Full-bleed card — 64 × 102',
+      optSizeHalfA5:'Half A5 photo — 99 × 130', optSizeStrip:'Photo strip (sticker booth) — 61 × 205',
+      optSizeA5:'A5 photo — 130 × 204',
+      lblOrientation:'Orientation', optPortrait:'Portrait', optLandscape:'Landscape',
+      lblPaper:'Paper', optPaper46:'4×6 in landscape', optPaperA4:'A4 portrait',
+      lblPerPhoto:'Copies per photo', optPer1:'1 copy per photo', optPer2:'2 copies per photo',
+      optPer4:'4 copies per photo', optPer9:'9 copies per photo',
+      chkMarks:'Cut lines', chkCorners:'Corner marks', chkRound:'Rounded corners',
+      secPhotos:'Photos', noPhotos:'No photos yet',
+      dzTitle:'Drag photos here', dzSubtitle:'Drop multiple files at once, or click to choose',
+      btnClearAll:'Clear all photos',
+      secEditPhoto:'Adjust photo', noSelection:'None selected',
+      tipRatioMismatch:'This photo’s aspect ratio doesn’t match the frame — try rotating 90° or “Fit whole photo”',
+      lblRotate:'Rotate', btnRotL:'↺ Left', btnRotR:'↻ Right', lblZoom:'Zoom',
+      lblSizeAction:'Size', btnFill:'Fill frame', btnFit:'Fit whole photo', btnCenter:'Center',
+      btnApplyAll:'Apply to all photos',
+      secSavePrint:'Save / Print', lblResolution:'Resolution',
+      optDpi300:'300 dpi — print standard', optDpi600:'600 dpi — max quality, large file',
+      btnJpgAll:'JPG (all sheets)', btnPdfAll:'PDF (all sheets)',
+      btnJpgOne:'JPG (this sheet only)', btnPrint:'Print',
+      secPrinterHelp:'Printer setup guide',
+      tipBorderless:'<strong>Always turn Borderless off</strong> — borderless mode enlarges the image 2–3%, throwing off the cut size',
+      notesBlock:
+        '<strong>Printing from the PDF file — easiest</strong>'+
+        '<ul><li>The PDF page is already the exact paper size — pick the matching paper and print, no scaling needed.</li></ul>'+
+        '<hr class="divider">'+
+        '<strong>Printing from the JPG file</strong>'+
+        '<ul><li>Fit to page — <span class="yes">OK</span> the photo’s aspect ratio matches the paper exactly</li>'+
+        '<li>Borderless and Zoom to fill — <span class="no">off</span></li></ul>'+
+        '<hr class="divider">'+
+        '<strong>Printing directly from this page</strong>'+
+        '<ul><li>Scale <strong>100%</strong> — <span class="no">do not</span> use Fit to page</li>'+
+        '<li>Margins: <strong>None</strong> · Headers and footers: <span class="no">off</span></li></ul>'+
+        '<hr class="divider">'+
+        '<strong>Sending to a print shop</strong>'+
+        '<ul><li>Tell them to print full-size with no trimming — the 4 corner marks are your check: if a corner is missing, the shop trimmed the edge.</li></ul>'+
+        '<hr class="divider">'+
+        '<strong>File quality</strong>'+
+        '<ul><li>Original photos are never downscaled or re-compressed; rotation is computed at draw time.</li>'+
+        '<li>The PDF embeds the same JPGs it saves · multiple JPG sheets are bundled into an uncompressed ZIP.</li></ul>',
+      toggleSidebar:'Show/hide sidebar', prevSheet:'Previous sheet', nextSheet:'Next sheet',
+      zoomOut:'Zoom out', zoomIn:'Zoom in', btnFitScreen:'Fit screen',
+      themeToggleTitle:'Toggle light/dark theme', langToggleTitle:'Switch language / สลับภาษา',
+      btnRemove:'Remove', paperName46:'4×6 in', paperNameA4:'A4',
+      pageLabel:function(cur,total){ return 'Sheet '+cur+' / '+total },
+      layoutInfo:function(cw,ch,paperName,n){ return cw+'×'+ch+' · '+paperName+' · '+n+'/sheet' },
+      countWithPhotos:function(n,sheets){ return n+' photo(s) · '+sheets+' sheet(s)' },
+      photoLabel:function(idx,name){ return 'Photo '+idx+' · '+name },
+      noticeRotate:function(ori){ return 'Rotated to '+(ori==='p'?'landscape':'portrait')+' — the original orientation doesn’t fit this paper' },
+      noticeSwitchA4:'This size doesn’t fit 4×6in paper (too large) — switched to A4',
+      noticeSwitchA4Rotate:'This size doesn’t fit 4×6in paper — switched to A4 and rotated the orientation',
+      noImageFiles:'No image files found',
+      readingFiles:function(n){ return 'Reading '+n+' image file(s)…' },
+      addedSummary:function(n,sheets){ return n+' photo(s) · '+sheets+' sheet(s) — click a photo on the sheet to select it, then drag to reposition' },
+      appliedToAll:'Applied rotation, zoom and position to all photos',
+      creatingFile:'Creating file…',
+      savedSheet:function(n){ return 'Saved sheet '+n },
+      cancelledSave:'Save cancelled', saveFailed:'Save failed',
+      creatingSheet:function(i,n){ return 'Creating sheet '+i+' / '+n+'…' },
+      savedJpg:function(w,h){ return 'Saved JPG ('+w+' × '+h+' px)' },
+      savedZip:function(n){ return 'Saved ZIP — contains '+n+' JPG sheet(s)' },
+      mergingPdf:'Merging into PDF…',
+      savedPdf:function(n,paperName){ return 'Saved PDF — '+n+' page(s), '+paperName },
+      pdfFailed:'PDF creation failed',
+      needPhotosFirst:'No photos yet — add some first',
+      bootHint:'Start by dragging photos into the sidebar'
+    }
+  };
+  function T(key){
+    var v=I18N[LANG][key];
+    if(typeof v==='function') return v.apply(null,Array.prototype.slice.call(arguments,1));
+    return v;
+  }
+  function applyLang(){
+    document.documentElement.lang=LANG;
+    document.title=T('appTitle');
+    document.querySelectorAll('[data-i18n]').forEach(function(e){ e.textContent=T(e.dataset.i18n) });
+    document.querySelectorAll('[data-i18n-html]').forEach(function(e){ e.innerHTML=T(e.dataset.i18nHtml) });
+    document.querySelectorAll('[data-i18n-title]').forEach(function(e){
+      var v=T(e.dataset.i18nTitle); e.title=v;
+      if(e.hasAttribute('aria-label')) e.setAttribute('aria-label',v);
+    });
+    el('langToggle').textContent=LANG.toUpperCase();
+  }
+  function setLang(l){
+    LANG=l; try{localStorage.setItem(LANG_KEY,l)}catch(e){}
+    applyLang();
+    buildSheets(); renderStrip(); syncEditor();
+  }
 
   var SIZES={
     card  :{name:'การ์ด',       w:54,  h:85.6, tag:'card'},
@@ -422,13 +596,14 @@
              mx:(pp.w-(cols*d.w+(cols-1)*GAP))/2,
              my:(pp.h-(rows*d.h+(rows-1)*GAP))/2 };
   }
+  function paperName(key){ return key==='a4' ? T('paperNameA4') : T('paperName46') }
   function resolve(){
     var sz=S(), ori=userOri, pk=userPaper, msg='';
     var tries=[
       [pk,ori,''],
-      [pk,ori==='p'?'l':'p','หมุนรูปเป็นแนว'+(ori==='p'?'นอน':'ตั้ง')+'ให้ เพราะแนวเดิมใส่กระดาษนี้ไม่ได้'],
-      ['a4',ori,'ขนาดนี้ใส่กระดาษ 4×6 นิ้วไม่ได้ (ใหญ่เกิน) สลับเป็น A4 ให้แล้ว'],
-      ['a4',ori==='p'?'l':'p','ขนาดนี้ใส่กระดาษ 4×6 นิ้วไม่ได้ สลับเป็น A4 และหมุนแนวรูปให้แล้ว']
+      [pk,ori==='p'?'l':'p',T('noticeRotate',ori)],
+      ['a4',ori,T('noticeSwitchA4')],
+      ['a4',ori==='p'?'l':'p',T('noticeSwitchA4Rotate')]
     ];
     for(var i=0;i<tries.length;i++){
       var t=tries[i], d=dimsFor(sz,t[1]), L=layFor(PAPERS[t[0]],d);
@@ -442,7 +617,7 @@
     var nt=el('notice');
     if(msg){ nt.textContent=msg; nt.hidden=false } else { nt.hidden=true }
     var pp=P();
-    el('layoutinfo').textContent=CW+'×'+CHmm+' · '+pp.name+' · '+LAY.n+' ใบ/แผ่น';
+    el('layoutinfo').textContent=T('layoutInfo',CW,CHmm,paperName(el('paper').value),LAY.n);
     el('pagecss').textContent='@media print{@page{size:'+pp.w+'mm '+pp.h+'mm;margin:0}}';
   }
 
@@ -510,7 +685,7 @@
   }
   function showSheet(){
     sheetEls.forEach(function(sh,i){ sh.classList.toggle('focus',i===cur) });
-    el('pglabel').textContent='แผ่น '+(cur+1)+' / '+nSheets();
+    el('pglabel').textContent=T('pageLabel',cur+1,nSheets());
     el('prev').disabled=cur<=0;
     el('next').disabled=cur>=nSheets()-1;
   }
@@ -547,7 +722,7 @@
       t.className='thumb'+(i===sel?' sel':'');
       t.style.width=tw+'px'; t.style.height=th+'px';
       t.innerHTML='<img src="'+p.src+'" alt=""><span class="num">'+(i+1)+'</span>'+
-                  '<button class="x" title="เอาออก">×</button>';
+                  '<button class="x" title="'+T('btnRemove')+'">×</button>';
       t.addEventListener('click',function(e){
         if(e.target.classList.contains('x')){ removePhoto(i); return }
         select(i);
@@ -556,7 +731,7 @@
     });
     var per=parseInt(el('per').value,10);
     var ns=Math.max(1,Math.ceil(photos.length*per/perSheet()));
-    el('count').textContent=photos.length ? (photos.length+' รูป · '+ns+' แผ่น') : 'ยังไม่มีรูป';
+    el('count').textContent=photos.length ? T('countWithPhotos',photos.length,ns) : T('noPhotos');
   }
   function select(i){
     sel=i; renderStrip(); syncEditor();
@@ -572,10 +747,10 @@
   function syncEditor(){
     var on=sel>=0&&photos[sel];
     el('editor').classList.toggle('off',!on);
-    if(!on){ el('selname').textContent='ยังไม่ได้เลือก'; return }
+    if(!on){ el('selname').textContent=T('noSelection'); return }
     var p=photos[sel];
     var nm=p.name.length>18?p.name.slice(0,16)+'…':p.name;
-    el('selname').textContent='รูปที่ '+(sel+1)+' · '+nm;
+    el('selname').textContent=T('photoLabel',sel+1,nm);
     el('z').min=Math.max(10,Math.round(fitScale(p)*100));
     el('z').value=Math.round(p.scale*100);
     el('zv').textContent=Math.round(p.scale*100)+'%';
@@ -590,8 +765,8 @@
 
   function addFiles(list){
     var fs=Array.prototype.slice.call(list).filter(function(f){return /^image\//.test(f.type)});
-    if(!fs.length){ say('ไม่พบไฟล์รูปภาพ'); return }
-    say('กำลังอ่านรูป '+fs.length+' ไฟล์…');
+    if(!fs.length){ say(T('noImageFiles')); return }
+    say(T('readingFiles',fs.length));
     var done=0;
     fs.forEach(function(f){
       var r=new FileReader();
@@ -610,7 +785,7 @@
       if(++done<fs.length) return;
       if(sel<0&&photos.length) sel=0;
       buildSheets(); renderStrip(); syncEditor();
-      say(photos.length+' รูป · '+nSheets()+' แผ่น — คลิกรูปในกระดาษเพื่อเลือก แล้วลากเลื่อนได้');
+      say(T('addedSummary',photos.length,nSheets()));
     }
   }
 
@@ -640,7 +815,7 @@
         if(sel<0||!photos[sel]) return;
         var s=photos[sel];
         photos.forEach(function(p){ p.rot=s.rot; p.scale=s.scale; p.dx=s.dx; p.dy=s.dy; clamp(p) });
-        renderAllCards(); say('ใช้ค่าการหมุน ซูม และตำแหน่ง กับทุกรูปแล้ว');
+        renderAllCards(); say(T('appliedToAll'));
       }
     });
   });
@@ -932,47 +1107,50 @@
     document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(url)},60000);
     return Promise.resolve();
   }
-  function guard(){ if(!photos.length){ say('ยังไม่มีรูป — ใส่รูปก่อน'); return false } return true }
+  function guard(){ if(!photos.length){ say(T('needPhotosFirst')); return false } return true }
   function busy(on){ ['saveJpgAll','saveJpgOne','savePdf','print'].forEach(function(id){ el(id).disabled=on }) }
   function pad(n){ return (n<10?'0':'')+n }
   function dpi(){ return parseInt(el('dpi').value,10) }
   function base(){ return S().tag+'-'+P().tag+'-'+dpi()+'dpi' }
 
   el('saveJpgOne').addEventListener('click',function(){
-    if(!guard()) return; busy(true); say('กำลังสร้างไฟล์…');
+    if(!guard()) return; busy(true); say(T('creatingFile'));
     drawSheet(cur,dpi()).then(function(r){
       return saveBlob(new Blob([r.bytes],{type:'image/jpeg'}), base()+'-'+pad(cur+1)+'.jpg');
-    }).then(function(){ say('บันทึกแผ่นที่ '+(cur+1)+' แล้ว') })
-      .catch(function(e){ say(e&&e.code==='declined'?'ยกเลิกการบันทึก':'บันทึกไม่สำเร็จ') })
+    }).then(function(){ say(T('savedSheet',cur+1)) })
+      .catch(function(e){ say(e&&e.code==='declined'?T('cancelledSave'):T('saveFailed')) })
       .then(function(){ busy(false) });
   });
   el('saveJpgAll').addEventListener('click',function(){
     if(!guard()) return; busy(true);
-    allSheets(dpi(),function(i,n){ say('กำลังสร้างแผ่น '+i+' / '+n+'…') }).then(function(rs){
+    allSheets(dpi(),function(i,n){ say(T('creatingSheet',i,n)) }).then(function(rs){
       if(rs.length===1) return saveBlob(new Blob([rs[0].bytes],{type:'image/jpeg'}), base()+'.jpg')
-        .then(function(){ say('บันทึก JPG แล้ว ('+rs[0].w+' × '+rs[0].h+' px)') });
+        .then(function(){ say(T('savedJpg',rs[0].w,rs[0].h)) });
       var zip=buildZIP(rs.map(function(r,i){ return {name:base()+'-'+pad(i+1)+'.jpg', bytes:r.bytes} }));
       return saveBlob(zip, base()+'.zip')
-        .then(function(){ say('บันทึก ZIP แล้ว — ข้างในมี JPG '+rs.length+' แผ่น') });
-    }).catch(function(e){ say(e&&e.code==='declined'?'ยกเลิกการบันทึก':'บันทึกไม่สำเร็จ') })
+        .then(function(){ say(T('savedZip',rs.length)) });
+    }).catch(function(e){ say(e&&e.code==='declined'?T('cancelledSave'):T('saveFailed')) })
       .then(function(){ busy(false) });
   });
   el('savePdf').addEventListener('click',function(){
     if(!guard()) return; busy(true);
-    allSheets(dpi(),function(i,n){ say('กำลังสร้างแผ่น '+i+' / '+n+'…') }).then(function(rs){
-      say('กำลังรวมเป็น PDF…');
+    allSheets(dpi(),function(i,n){ say(T('creatingSheet',i,n)) }).then(function(rs){
+      say(T('mergingPdf'));
       return saveBlob(buildPDF(rs), base()+'.pdf')
-        .then(function(){ say('บันทึก PDF แล้ว — '+rs.length+' หน้า ขนาด '+P().name) });
-    }).catch(function(e){ say(e&&e.code==='declined'?'ยกเลิกการบันทึก':'สร้าง PDF ไม่สำเร็จ') })
+        .then(function(){ say(T('savedPdf',rs.length,paperName(el('paper').value))) });
+    }).catch(function(e){ say(e&&e.code==='declined'?T('cancelledSave'):T('pdfFailed')) })
       .then(function(){ busy(false) });
   });
   el('print').addEventListener('click',function(){ window.print() });
 
+  el('langToggle').addEventListener('click',function(){ setLang(LANG==='th'?'en':'th') });
+
   // ---------- เริ่มต้น ----------
   function boot(){
     measureMM();
+    applyLang();
     buildSheets(); renderStrip(); syncEditor();
-    say('เริ่มจากลากรูปมาวางในแถบซ้าย');
+    say(T('bootHint'));
   }
   if(window.ResizeObserver) new ResizeObserver(function(){ applyZoom() }).observe(view);
   window.addEventListener('resize',function(){ measureMM(); applyZoom() });
