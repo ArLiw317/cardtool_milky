@@ -94,7 +94,7 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .field{display:flex;flex-direction:column;gap:4px;min-width:0}
   .field span{font-size:12px;color:var(--muted)}
-  select{font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;
+  select,input[type=number]{font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;
          background:var(--surface);color:var(--ink);width:100%}
 
   .drop-zone{border:1.5px dashed var(--line);border-radius:8px;padding:14px 10px;cursor:pointer;
@@ -256,12 +256,7 @@
               </select>
             </label>
             <label class="field"><span data-i18n="lblPerPhoto">จำนวนใบต่อรูป</span>
-              <select id="per">
-                <option value="1" selected data-i18n="optPer1">รูปละ 1 ใบ</option>
-                <option value="2" data-i18n="optPer2">รูปละ 2 ใบ</option>
-                <option value="4" data-i18n="optPer4">รูปละ 4 ใบ</option>
-                <option value="9" data-i18n="optPer9">รูปละ 9 ใบ</option>
-              </select>
+              <input type="number" id="per" min="1" max="99" step="1" value="1" inputmode="numeric">
             </label>
           </div>
           <div class="info" id="notice" hidden></div>
@@ -410,8 +405,7 @@
       optSizeA5:'รูปขนาด A5 — 130 × 204',
       lblOrientation:'แนวรูป', optPortrait:'แนวตั้ง', optLandscape:'แนวนอน',
       lblPaper:'กระดาษ', optPaper46:'4×6 นิ้ว แนวนอน', optPaperA4:'A4 แนวตั้ง',
-      lblPerPhoto:'จำนวนใบต่อรูป', optPer1:'รูปละ 1 ใบ', optPer2:'รูปละ 2 ใบ',
-      optPer4:'รูปละ 4 ใบ', optPer9:'รูปละ 9 ใบ',
+      lblPerPhoto:'จำนวนใบต่อรูป',
       chkMarks:'เส้นตัด', chkCorners:'มุมกระดาษ', chkRound:'มุมมน',
       secPhotos:'รูปภาพ', noPhotos:'ยังไม่มีรูป',
       dzTitle:'ลากรูปมาวางตรงนี้', dzSubtitle:'ใส่พร้อมกันหลายไฟล์ได้ หรือคลิกเพื่อเลือก',
@@ -482,8 +476,7 @@
       optSizeA5:'A5 photo — 130 × 204',
       lblOrientation:'Orientation', optPortrait:'Portrait', optLandscape:'Landscape',
       lblPaper:'Paper', optPaper46:'4×6 in landscape', optPaperA4:'A4 portrait',
-      lblPerPhoto:'Copies per photo', optPer1:'1 copy per photo', optPer2:'2 copies per photo',
-      optPer4:'4 copies per photo', optPer9:'9 copies per photo',
+      lblPerPhoto:'Copies per photo',
       chkMarks:'Cut lines', chkCorners:'Corner marks', chkRound:'Rounded corners',
       secPhotos:'Photos', noPhotos:'No photos yet',
       dzTitle:'Drag photos here', dzSubtitle:'Drop multiple files at once, or click to choose',
@@ -643,8 +636,9 @@
 
   function perSheet(){ return LAY.n }
   function nSheets(){ return Math.max(1, Math.ceil(slots.length/perSheet())) }
+  function perValue(){ return Math.max(1,Math.min(99,parseInt(el('per').value,10)||1)) }
   function buildSlots(){
-    var per=parseInt(el('per').value,10);
+    var per=perValue();
     slots=[]; photos.forEach(function(ph,i){ for(var n=0;n<per;n++) slots.push(i) });
   }
   function buildSheets(){
@@ -729,7 +723,7 @@
       });
       strip.appendChild(t);
     });
-    var per=parseInt(el('per').value,10);
+    var per=perValue();
     var ns=Math.max(1,Math.ceil(photos.length*per/perSheet()));
     el('count').textContent=photos.length ? T('countWithPhotos',photos.length,ns) : T('noPhotos');
   }
@@ -790,12 +784,18 @@
   }
 
   el('fin').addEventListener('change',function(e){ addFiles(e.target.files); e.target.value='' });
-  ['size','ori','paper','per'].forEach(function(id){
+  ['size','ori','paper'].forEach(function(id){
     el(id).addEventListener('change',function(){
       if(id==='ori')   userOri=el('ori').value;
       if(id==='paper') userPaper=el('paper').value;
       cur=0; buildSheets(); renderStrip(); syncEditor();
     }) });
+  el('per').addEventListener('input',function(){
+    cur=0; buildSheets(); renderStrip(); syncEditor();
+  });
+  el('per').addEventListener('blur',function(){
+    el('per').value=perValue();
+  });
   el('clear').addEventListener('click',function(){
     photos=[]; sel=-1; cur=0; buildSheets(); renderStrip(); syncEditor(); say('') });
   el('prev').addEventListener('click',function(){ if(cur>0){cur--;showSheet();scrollToCurrent()} });
