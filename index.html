@@ -157,11 +157,11 @@
   hr.divider{border:0;border-top:1px solid var(--line2);margin:10px 0}
 
   /* ---------- กระดาษ ---------- */
-  .sheet{background:#fff;position:relative;display:grid;flex:0 0 auto;
-         justify-content:center;align-content:center;
+  .sheet{background:#fff;position:relative;flex:0 0 auto;
          box-shadow:0 3px 20px rgba(16,22,30,.22)}
   .sheet.focus{outline:2px solid var(--reg);outline-offset:3px}
-  .card{position:relative;overflow:hidden;background:#fff;cursor:grab}
+  /* ตำแหน่งการ์ดคำนวณเป็น มม. จาก layout — การ์ดที่วางเอียงใช้ transform หมุน 90° รอบมุมซ้ายบน */
+  .card{position:absolute;overflow:hidden;background:#fff;cursor:grab;transform-origin:0 0}
   .card.empty{background:#F7F8F9;cursor:default}
   .card:active{cursor:grabbing}
   .card.round{border-radius:3.18mm}
@@ -181,6 +181,21 @@
 
   body.dragging .drop-zone{border-color:var(--reg);color:var(--reg)}
 
+  /* ---------- หน้าต่างเตือนก่อนพิมพ์ ---------- */
+  #printdlg{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+            padding:16px;background:rgba(16,22,30,.5)}
+  #printdlg[hidden]{display:none}
+  #printdlg .box{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;
+                 width:min(440px,100%);max-height:100%;overflow-y:auto;padding:18px 18px 16px;
+                 box-shadow:0 10px 40px rgba(16,22,30,.35);display:flex;flex-direction:column;gap:12px}
+  #printdlg h2{margin:0;font-size:16px}
+  #printdlg .paperbig{font-size:20px;font-weight:700;color:var(--reg);background:var(--reg-soft);
+                      border-radius:9px;padding:10px 12px;line-height:1.35}
+  #printdlg .paperbig small{display:block;font-size:12.5px;font-weight:500;color:var(--muted)}
+  #printdlg ol{margin:0;padding-left:20px;font-size:13.5px}
+  #printdlg ol li{margin-bottom:4px}
+  #printdlg .actions{justify-content:flex-end}
+
   /* ---------- จอแคบ / มือถือ ---------- */
   @media (max-width:820px){
     #side{position:fixed;top:0;bottom:0;left:0;z-index:30;width:min(86vw,360px);
@@ -199,7 +214,7 @@
   @media print{
     html,body{height:auto;overflow:visible;background:#fff}
     #app{display:block;height:auto}
-    #side,#grip,#topbar,#statusbar,#backdrop,#mmprobe{display:none !important}
+    #side,#grip,#topbar,#statusbar,#backdrop,#mmprobe,#printdlg{display:none !important}
     #main{display:block;background:#fff}
     #view{overflow:visible;padding:0;height:auto;flex:none}
     #sizer{width:auto !important;height:auto !important;margin:0 !important}
@@ -236,8 +251,9 @@
           <div class="grid2">
             <label class="field"><span data-i18n="lblPhotoSize">ขนาดรูป</span>
               <select id="size">
-                <option value="card" selected data-i18n="optSizeCard">การ์ด — 54 × 85.6</option>
+                <option value="card" selected data-i18n="optSizeCard">การ์ด — 55 × 86</option>
                 <option value="full" data-i18n="optSizeFull">การ์ดเต็มกรอบ — 64 × 102</option>
+                <option value="p46full" data-i18n="optSize4x6Full">รูป 4×6 นิ้ว เต็มภาพ — 101.6 × 152.4</option>
                 <option value="halfa5" data-i18n="optSizeHalfA5">รูปครึ่ง A5 — 99 × 130</option>
                 <option value="strip" data-i18n="optSizeStrip">รูปยาว (ตู้สติ๊กเกอร์) — 61 × 205</option>
                 <option value="a5" data-i18n="optSizeA5">รูปขนาด A5 — 130 × 204</option>
@@ -264,6 +280,7 @@
             <label class="chk"><input type="checkbox" id="marks" checked> <span data-i18n="chkMarks">เส้นตัด</span></label>
             <label class="chk"><input type="checkbox" id="corners" checked> <span data-i18n="chkCorners">มุมกระดาษ</span></label>
             <label class="chk"><input type="checkbox" id="round"> <span data-i18n="chkRound">มุมมน</span></label>
+            <label class="chk"><input type="checkbox" id="tight"> <span data-i18n="chkTight">ขอบแคบ 2 มม.</span></label>
           </div>
         </div>
       </details>
@@ -288,6 +305,10 @@
             <label class="lbl" data-i18n="lblRotate">หมุน</label>
             <button class="mini" data-act="rot" data-dir="-90" data-i18n="btnRotL">↺ ซ้าย</button>
             <button class="mini" data-act="rot" data-dir="90" data-i18n="btnRotR">↻ ขวา</button>
+          </div>
+          <div class="row">
+            <label class="lbl" for="rt" data-i18n="lblAngle">องศา</label>
+            <input type="range" id="rt" min="-180" max="180" step="1" value="0" data-i18n-title="angleHint" title="ดับเบิลคลิกเพื่อตั้งตรง">
             <span class="val" id="rv">0°</span>
           </div>
           <div class="row">
@@ -320,7 +341,7 @@
           </div>
           <div class="actions">
             <button class="ghost" id="saveJpgOne" data-i18n="btnJpgOne">JPG เฉพาะแผ่นนี้</button>
-            <button class="ghost" id="print" data-i18n="btnPrint">พิมพ์</button>
+            <button class="ghost" id="print">พิมพ์</button>
           </div>
         </div>
       </details>
@@ -386,9 +407,23 @@
   </main>
 </div>
 
+<div id="printdlg" hidden role="dialog" aria-modal="true" aria-labelledby="pdTitle">
+  <div class="box">
+    <h2 id="pdTitle" data-i18n="pdTitle">ก่อนพิมพ์ ตั้งค่าเครื่องพิมพ์ตามนี้</h2>
+    <div class="paperbig" id="pdPaper"></div>
+    <ol id="pdSteps"></ol>
+    <div class="tip" data-i18n-html="pdWinTip"></div>
+    <div class="actions">
+      <button class="ghost" id="pdCancel" data-i18n="btnCancel">ยกเลิก</button>
+      <button class="ghost" id="pdBrowser" data-i18n="btnPrintBrowser">พิมพ์จากหน้านี้</button>
+      <button class="go" id="pdPdf" data-i18n="btnPrintPdf">พิมพ์ผ่าน PDF (แนะนำ)</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
-  var GAP=2, MINM=5, JPEG_Q=0.98;
+  var GAP=2, MINM=3, MINM_TIGHT=2, JPEG_Q=0.98;   // ขอบปกติ / ขอบแคบ (ใช้เฉพาะเมื่อได้รูปเพิ่ม)
   function el(id){return document.getElementById(id)}
 
   // ---------- ภาษา (TH/EN) ----------
@@ -400,30 +435,38 @@
       appSubtitle:'จัดรูปลงกระดาษ 4×6 นิ้ว หรือ A4 แล้วบันทึกเป็น JPG / PDF',
       hideSidebar:'ซ่อนแถบเครื่องมือ',
       secSizePaper:'ขนาดและกระดาษ', lblPhotoSize:'ขนาดรูป',
-      optSizeCard:'การ์ด — 54 × 85.6', optSizeFull:'การ์ดเต็มกรอบ — 64 × 102',
+      optSizeCard:'การ์ด — 55 × 86', optSizeFull:'การ์ดเต็มกรอบ — 64 × 102',
+      optSize4x6Full:'รูป 4×6 นิ้ว เต็มภาพ — 101.6 × 152.4',
       optSizeHalfA5:'รูปครึ่ง A5 — 99 × 130', optSizeStrip:'รูปยาว (ตู้สติ๊กเกอร์) — 61 × 205',
       optSizeA5:'รูปขนาด A5 — 130 × 204',
       lblOrientation:'แนวรูป', optPortrait:'แนวตั้ง', optLandscape:'แนวนอน',
       lblPaper:'กระดาษ', optPaper46:'4×6 นิ้ว แนวนอน', optPaperA4:'A4 แนวตั้ง',
       lblPerPhoto:'จำนวนใบต่อรูป',
-      chkMarks:'เส้นตัด', chkCorners:'มุมกระดาษ', chkRound:'มุมมน',
+      chkMarks:'เส้นตัด', chkCorners:'มุมกระดาษ', chkRound:'มุมมน', chkTight:'ขอบแคบ 2 มม.',
       secPhotos:'รูปภาพ', noPhotos:'ยังไม่มีรูป',
       dzTitle:'ลากรูปมาวางตรงนี้', dzSubtitle:'ใส่พร้อมกันหลายไฟล์ได้ หรือคลิกเพื่อเลือก',
       btnClearAll:'ล้างรูปทั้งหมด',
       secEditPhoto:'ปรับแต่งรูป', noSelection:'ยังไม่ได้เลือก',
       tipRatioMismatch:'สัดส่วนรูปไม่ตรงกับกรอบ — ลองหมุน 90° หรือกด “เห็นทั้งรูป”',
       lblRotate:'หมุน', btnRotL:'↺ ซ้าย', btnRotR:'↻ ขวา', lblZoom:'ซูม',
+      lblAngle:'องศา', angleHint:'ดับเบิลคลิกเพื่อตั้งตรง',
       lblSizeAction:'ขนาด', btnFill:'เต็มกรอบ', btnFit:'เห็นทั้งรูป', btnCenter:'จัดกลาง',
       btnApplyAll:'ใช้ค่านี้กับทุกรูป',
       secSavePrint:'บันทึก / พิมพ์', lblResolution:'ความละเอียด',
       optDpi300:'300 dpi — มาตรฐานงานพิมพ์', optDpi600:'600 dpi — สูงสุด ไฟล์ใหญ่',
       btnJpgAll:'JPG ทุกแผ่น', btnPdfAll:'PDF รวมทุกแผ่น',
-      btnJpgOne:'JPG เฉพาะแผ่นนี้', btnPrint:'พิมพ์',
+      btnJpgOne:'JPG เฉพาะแผ่นนี้',
+      btnPrintFor:function(paper){ return 'พิมพ์ · กระดาษ '+paper },
       secPrinterHelp:'วิธีตั้งค่าเครื่องพิมพ์',
-      tipBorderless:'<strong>ปิด Borderless / ไร้ขอบ เสมอ</strong> — โหมดไร้ขอบขยายภาพ 2–3% ทำให้ขนาดที่ตัดออกมาไม่ตรง',
+      tipBorderless:'<strong>ปิด Borderless / ไร้ขอบ เสมอ</strong> — โหมดไร้ขอบขยายภาพ 2–3% ทำให้ขนาดที่ตัดออกมาไม่ตรง '+
+        '(ยกเว้นรูป 4×6 นิ้ว เต็มภาพ บนกระดาษ 4×6 ที่ต้องเปิดไร้ขอบ)',
       notesBlock:
         '<strong>พิมพ์จากไฟล์ PDF — ง่ายที่สุด</strong>'+
         '<ul><li>หน้า PDF เป็นขนาดกระดาษจริงมาแล้ว เลือกกระดาษให้ตรงแล้วกดพิมพ์ ไม่ต้องยุ่งกับสเกล</li></ul>'+
+        '<hr class="divider">'+
+        '<strong>ให้เครื่องพิมพ์จำกระดาษ 4×6 ไว้เลย (Windows)</strong>'+
+        '<ul><li>Settings › Bluetooth &amp; devices › Printers &amp; scanners › เลือกเครื่องพิมพ์ › Printing preferences › Paper size = <strong>4×6 in (10×15 cm)</strong></li>'+
+        '<li>เบราว์เซอร์ไม่สามารถบังคับเลือกกระดาษในเครื่องพิมพ์ได้เอง จึงต้องตั้งที่เครื่องพิมพ์หรือเลือกในหน้าต่างพิมพ์ทุกครั้ง</li></ul>'+
         '<hr class="divider">'+
         '<strong>พิมพ์จากไฟล์ JPG</strong>'+
         '<ul><li>Fit to page — <span class="yes">ใช้ได้</span> สัดส่วนรูปตรงกับกระดาษพอดี</li>'+
@@ -447,9 +490,11 @@
       layoutInfo:function(cw,ch,paperName,n){ return cw+'×'+ch+' · '+paperName+' · '+n+' ใบ/แผ่น' },
       countWithPhotos:function(n,sheets){ return n+' รูป · '+sheets+' แผ่น' },
       photoLabel:function(idx,name){ return 'รูปที่ '+idx+' · '+name },
-      noticeRotate:function(ori){ return 'หมุนรูปเป็นแนว'+(ori==='p'?'นอน':'ตั้ง')+'ให้ เพราะแนวเดิมใส่กระดาษนี้ไม่ได้' },
       noticeSwitchA4:'ขนาดนี้ใส่กระดาษ 4×6 นิ้วไม่ได้ (ใหญ่เกิน) สลับเป็น A4 ให้แล้ว',
-      noticeSwitchA4Rotate:'ขนาดนี้ใส่กระดาษ 4×6 นิ้วไม่ได้ สลับเป็น A4 และหมุนแนวรูปให้แล้ว',
+      noticeTight:'ใช้ขอบแคบ 2 มม. — เครื่องที่พิมพ์ชิดขอบได้แค่ 3 มม. (เช่น Epson L-series) ขอบรูปที่ชิดกระดาษจะหายเล็กน้อย เหมาะกับส่งร้านอัดรูป',
+      hintTight:function(n,t){ return 'ติ๊ก “ขอบแคบ 2 มม.” จะได้ '+t+' ใบ/แผ่น (ตอนนี้ '+n+') — ใช้ได้กับเครื่องที่พิมพ์ชิดขอบ 2 มม. ได้ หรือส่งร้านอัดรูป' },
+      layoutRotated:function(n){ return ' · วางเอียง '+n },
+      layoutBleed:' · เต็มแผ่นไร้ขอบ',
       noImageFiles:'ไม่พบไฟล์รูปภาพ',
       readingFiles:function(n){ return 'กำลังอ่านรูป '+n+' ไฟล์…' },
       addedSummary:function(n,sheets){ return n+' รูป · '+sheets+' แผ่น — คลิกรูปในกระดาษเพื่อเลือก แล้วลากเลื่อนได้' },
@@ -464,37 +509,59 @@
       savedPdf:function(n,paperName){ return 'บันทึก PDF แล้ว — '+n+' หน้า ขนาด '+paperName },
       pdfFailed:'สร้าง PDF ไม่สำเร็จ',
       needPhotosFirst:'ยังไม่มีรูป — ใส่รูปก่อน',
-      bootHint:'เริ่มจากลากรูปมาวางในแถบซ้าย'
+      bootHint:'เริ่มจากลากรูปมาวางในแถบซ้าย',
+      pdTitle:'ก่อนพิมพ์ ตั้งค่าเครื่องพิมพ์ตามนี้',
+      pdPaper:function(paper,sub){ return 'Paper size: '+paper+'<small>'+sub+'</small>' },
+      pdPaperSub46:'บางเครื่องเรียก 10×15 ซม. / 102×152 มม. / Photo 4×6 · วางแนวนอน (Landscape)',
+      pdPaperSubA4:'A4 (210×297 มม.) · แนวตั้ง (Portrait)',
+      pdSteps:function(bleed){ return [
+        'ขนาดกระดาษ (Paper size) ต้องตรงกับด้านบน — อย่าปล่อยเป็นค่าเดิมของเครื่อง',
+        'สเกล <strong>100%</strong> / Actual size — ห้าม Fit to page',
+        'Margins: <strong>None</strong> · Headers and footers: ปิด',
+        bleed ? 'รูปเต็มแผ่น: <strong>เปิด</strong> Borderless / ไร้ขอบ' : 'Borderless / ไร้ขอบ: <strong>ปิด</strong>'
+      ] },
+      pdWinTip:'ตั้ง Paper size เป็นค่าเริ่มต้นใน Windows (Printing preferences) ครั้งเดียว แล้วไม่ต้องเลือกใหม่ทุกครั้ง — ดูวิธีใน “วิธีตั้งค่าเครื่องพิมพ์”',
+      btnCancel:'ยกเลิก', btnPrintBrowser:'พิมพ์จากหน้านี้', btnPrintPdf:'พิมพ์ผ่าน PDF (แนะนำ)',
+      openingPdf:'เปิด PDF ในแท็บใหม่แล้ว — กดพิมพ์จากตัวอ่าน PDF',
+      popupBlocked:'เบราว์เซอร์บล็อกแท็บใหม่ — บันทึกเป็นไฟล์ PDF แทน เปิดไฟล์แล้วสั่งพิมพ์ได้เลย'
     },
     en:{
       appTitle:'Photo Print Layout Tool',
       appSubtitle:'Lay out photos on 4×6in or A4 paper, then save as JPG / PDF',
       hideSidebar:'Hide sidebar',
       secSizePaper:'Size & Paper', lblPhotoSize:'Photo size',
-      optSizeCard:'Card — 54 × 85.6', optSizeFull:'Full-bleed card — 64 × 102',
+      optSizeCard:'Card — 55 × 86', optSizeFull:'Full-bleed card — 64 × 102',
+      optSize4x6Full:'4×6 in full photo — 101.6 × 152.4',
       optSizeHalfA5:'Half A5 photo — 99 × 130', optSizeStrip:'Photo strip (sticker booth) — 61 × 205',
       optSizeA5:'A5 photo — 130 × 204',
       lblOrientation:'Orientation', optPortrait:'Portrait', optLandscape:'Landscape',
       lblPaper:'Paper', optPaper46:'4×6 in landscape', optPaperA4:'A4 portrait',
       lblPerPhoto:'Copies per photo',
-      chkMarks:'Cut lines', chkCorners:'Corner marks', chkRound:'Rounded corners',
+      chkMarks:'Cut lines', chkCorners:'Corner marks', chkRound:'Rounded corners', chkTight:'Narrow 2 mm margin',
       secPhotos:'Photos', noPhotos:'No photos yet',
       dzTitle:'Drag photos here', dzSubtitle:'Drop multiple files at once, or click to choose',
       btnClearAll:'Clear all photos',
       secEditPhoto:'Adjust photo', noSelection:'None selected',
       tipRatioMismatch:'This photo’s aspect ratio doesn’t match the frame — try rotating 90° or “Fit whole photo”',
       lblRotate:'Rotate', btnRotL:'↺ Left', btnRotR:'↻ Right', lblZoom:'Zoom',
+      lblAngle:'Angle', angleHint:'Double-click to straighten',
       lblSizeAction:'Size', btnFill:'Fill frame', btnFit:'Fit whole photo', btnCenter:'Center',
       btnApplyAll:'Apply to all photos',
       secSavePrint:'Save / Print', lblResolution:'Resolution',
       optDpi300:'300 dpi — print standard', optDpi600:'600 dpi — max quality, large file',
       btnJpgAll:'JPG (all sheets)', btnPdfAll:'PDF (all sheets)',
-      btnJpgOne:'JPG (this sheet only)', btnPrint:'Print',
+      btnJpgOne:'JPG (this sheet only)',
+      btnPrintFor:function(paper){ return 'Print · '+paper+' paper' },
       secPrinterHelp:'Printer setup guide',
-      tipBorderless:'<strong>Always turn Borderless off</strong> — borderless mode enlarges the image 2–3%, throwing off the cut size',
+      tipBorderless:'<strong>Always turn Borderless off</strong> — borderless mode enlarges the image 2–3%, throwing off the cut size '+
+        '(except a 4×6 in full photo on 4×6 paper, which needs Borderless on)',
       notesBlock:
         '<strong>Printing from the PDF file — easiest</strong>'+
         '<ul><li>The PDF page is already the exact paper size — pick the matching paper and print, no scaling needed.</li></ul>'+
+        '<hr class="divider">'+
+        '<strong>Make the printer remember 4×6 paper (Windows)</strong>'+
+        '<ul><li>Settings › Bluetooth &amp; devices › Printers &amp; scanners › pick the printer › Printing preferences › Paper size = <strong>4×6 in (10×15 cm)</strong></li>'+
+        '<li>A web page can’t force the printer’s paper selection, so set it on the printer or pick it in the print dialog every time.</li></ul>'+
         '<hr class="divider">'+
         '<strong>Printing from the JPG file</strong>'+
         '<ul><li>Fit to page — <span class="yes">OK</span> the photo’s aspect ratio matches the paper exactly</li>'+
@@ -518,9 +585,11 @@
       layoutInfo:function(cw,ch,paperName,n){ return cw+'×'+ch+' · '+paperName+' · '+n+'/sheet' },
       countWithPhotos:function(n,sheets){ return n+' photo(s) · '+sheets+' sheet(s)' },
       photoLabel:function(idx,name){ return 'Photo '+idx+' · '+name },
-      noticeRotate:function(ori){ return 'Rotated to '+(ori==='p'?'landscape':'portrait')+' — the original orientation doesn’t fit this paper' },
       noticeSwitchA4:'This size doesn’t fit 4×6in paper (too large) — switched to A4',
-      noticeSwitchA4Rotate:'This size doesn’t fit 4×6in paper — switched to A4 and rotated the orientation',
+      noticeTight:'Using a narrow 2 mm margin — printers limited to 3 mm (e.g. Epson L-series) will clip photos at the paper edge slightly; best for print shops',
+      hintTight:function(n,t){ return 'Tick “Narrow 2 mm margin” to fit '+t+'/sheet (now '+n+') — for printers that can print 2 mm from the edge, or print shops' },
+      layoutRotated:function(n){ return ' · '+n+' turned' },
+      layoutBleed:' · full-bleed',
       noImageFiles:'No image files found',
       readingFiles:function(n){ return 'Reading '+n+' image file(s)…' },
       addedSummary:function(n,sheets){ return n+' photo(s) · '+sheets+' sheet(s) — click a photo on the sheet to select it, then drag to reposition' },
@@ -535,7 +604,21 @@
       savedPdf:function(n,paperName){ return 'Saved PDF — '+n+' page(s), '+paperName },
       pdfFailed:'PDF creation failed',
       needPhotosFirst:'No photos yet — add some first',
-      bootHint:'Start by dragging photos into the sidebar'
+      bootHint:'Start by dragging photos into the sidebar',
+      pdTitle:'Before printing, set up the printer like this',
+      pdPaper:function(paper,sub){ return 'Paper size: '+paper+'<small>'+sub+'</small>' },
+      pdPaperSub46:'Some printers call it 10×15 cm / 102×152 mm / Photo 4×6 · Landscape',
+      pdPaperSubA4:'A4 (210×297 mm) · Portrait',
+      pdSteps:function(bleed){ return [
+        'Paper size must match the above — don’t leave it on the printer’s default',
+        'Scale <strong>100%</strong> / Actual size — no Fit to page',
+        'Margins: <strong>None</strong> · Headers and footers: off',
+        bleed ? 'Full-bleed photo: Borderless <strong>on</strong>' : 'Borderless: <strong>off</strong>'
+      ] },
+      pdWinTip:'Set Paper size as the default once in Windows (Printing preferences) so you don’t have to pick it every time — see “Printer setup guide”',
+      btnCancel:'Cancel', btnPrintBrowser:'Print this page', btnPrintPdf:'Print via PDF (recommended)',
+      openingPdf:'PDF opened in a new tab — print from the PDF viewer',
+      popupBlocked:'The browser blocked the new tab — saved as a PDF file instead; open it and print'
     }
   };
   function T(key){
@@ -561,8 +644,9 @@
   }
 
   var SIZES={
-    card  :{name:'การ์ด',       w:54,  h:85.6, tag:'card'},
+    card  :{name:'การ์ด',       w:55,  h:86,   tag:'card'},
     full  :{name:'การ์ดเต็มกรอบ', w:64,  h:102,  tag:'full'},
+    p46full:{name:'รูป 4×6 เต็มภาพ', w:101.6, h:152.4, tag:'4x6full'},
     halfa5:{name:'รูปครึ่ง A5',   w:99,  h:130,  tag:'halfa5'},
     strip :{name:'รูปยาว',       w:61,  h:205,  tag:'strip'},
     a5    :{name:'รูปขนาด A5',    w:130, h:204,  tag:'a5'}
@@ -577,40 +661,110 @@
   var PXMM=3.7795;                                   // px ต่อ 1 มม. (วัดจริงตอนเริ่ม)
   function measureMM(){ var p=el('mmprobe'); if(p.offsetWidth) PXMM=p.offsetWidth/100 }
 
-  var CW=54, CHmm=85.6, CARD_A=CW/CHmm, CHr=CHmm/CW, LAY=null;
-  var userOri='p', userPaper='p46';
+  var CW=55, CHmm=86, CARD_A=CW/CHmm, CHr=CHmm/CW, LAY=null;
+  var userPaper='p46';
 
   function dimsFor(sz,ori){ return ori==='p' ? {w:sz.w,h:sz.h} : {w:sz.h,h:sz.w} }
-  function layFor(pp,d){
-    var cols=Math.floor((pp.w-2*MINM+GAP)/(d.w+GAP));
-    var rows=Math.floor((pp.h-2*MINM+GAP)/(d.h+GAP));
-    if(cols<1||rows<1) return null;
-    return { cols:cols, rows:rows, n:cols*rows,
-             mx:(pp.w-(cols*d.w+(cols-1)*GAP))/2,
-             my:(pp.h-(rows*d.h+(rows-1)*GAP))/2 };
+
+  // ---------- จัดวางให้ได้มากที่สุด ----------
+  // แนวรูป (กรอบ) คงตามที่ผู้ใช้เลือก แต่บนกระดาษวางการ์ดตรง (rot 0) หรือเอียง 90° (rot 1) ได้
+  // ลองทุกแบบ: ตารางแนวเดียว และแบ่งเป็น 2 แถบ (แถบแรกแนวหนึ่ง ที่เหลือเติมอีกแนว) ทั้งแนวนอนและแนวตั้ง
+  // แล้วเลือกแบบที่ได้จำนวนมากสุด ถ้าเท่ากันเลือกแบบที่วางเอียงน้อยกว่า
+  function gridIn(fw,fh,W,H){
+    var c=Math.floor((W+GAP+1e-6)/(fw+GAP)), r=Math.floor((H+GAP+1e-6)/(fh+GAP));
+    return (c<1||r<1) ? null : {c:c,r:r};
+  }
+  function placeBands(pw,ph,bands){
+    var total=0, rects=[];
+    bands.forEach(function(b,i){ b.h=b.r*b.f.h+(b.r-1)*GAP; total+=b.h+(i?GAP:0) });
+    var y=(ph-total)/2;
+    bands.forEach(function(b){
+      var bw=b.c*b.f.w+(b.c-1)*GAP, x0=(pw-bw)/2;
+      for(var r=0;r<b.r;r++) for(var c=0;c<b.c;c++)
+        rects.push({x:x0+c*(b.f.w+GAP), y:y+r*(b.f.h+GAP), w:b.f.w, h:b.f.h, rot:b.f.rot});
+      y+=b.h+GAP;
+    });
+    return rects;
+  }
+  // แถบบน: k แถวของแบบ A แล้วเติมพื้นที่ที่เหลือด้วยแบบ B
+  function bandLayouts(pw,ph,A,B,M){
+    var W=pw-2*M, H=ph-2*M, out=[];
+    var gA=gridIn(A.w,A.h,W,H), maxK=gA?gA.r:0;
+    for(var k=0;k<=maxK;k++){
+      var bands=[], rem=H;
+      if(k>0){ bands.push({f:A,c:gA.c,r:k}); rem-=k*A.h+(k-1)*GAP+GAP }
+      var gB=gridIn(B.w,B.h,W,rem);
+      if(gB) bands.push({f:B,c:gB.c,r:gB.r});
+      if(bands.length) out.push(placeBands(pw,ph,bands));
+    }
+    return out;
+  }
+  function packAt(pp,d,M){
+    var F0={w:d.w,h:d.h,rot:0}, F1={w:d.h,h:d.w,rot:1};
+    function tr(f){ return {w:f.h,h:f.w,rot:f.rot} }
+    var cands=[];
+    [[F0,F1],[F1,F0]].forEach(function(ab){
+      cands=cands.concat(bandLayouts(pp.w,pp.h,ab[0],ab[1],M));
+      // แบ่งแถบแนวตั้ง = คำนวณบนกระดาษที่สลับแกน แล้วสลับกลับ
+      bandLayouts(pp.h,pp.w,tr(ab[0]),tr(ab[1]),M).forEach(function(rs){
+        cands.push(rs.map(function(r){ return {x:r.y,y:r.x,w:r.h,h:r.w,rot:r.rot} }));
+      });
+    });
+    var best=null, bn=0, brot=0;
+    cands.forEach(function(rs){
+      var nr=rs.filter(function(r){return r.rot}).length;
+      if(rs.length>bn || (rs.length===bn && nr<brot)){ best=rs; bn=rs.length; brot=nr }
+    });
+    if(!best) return null;
+    best.sort(function(a,b){ return Math.abs(a.y-b.y)>0.5 ? a.y-b.y : a.x-b.x });
+    return {rects:best, n:bn, rotated:brot, bleed:false, tight:M<MINM};
+  }
+  // มุมกระดาษเป็นเส้นรูปตัว L ยาว 6 มม. ห่างขอบ 2 มม. — ถ้ามีการ์ดทับเส้นนี้ (ขอบแคบ) ให้ซ่อนมุมกระดาษ
+  function cornersHit(pp,rects){
+    return rects.some(function(r){
+      return [[0,0],[1,0],[0,1],[1,1]].some(function(k){
+        // สะท้อนพิกัดให้ทุกมุมเหมือนมุมซ้ายบน
+        var x=k[0]?pp.w-r.x-r.w:r.x, y=k[1]?pp.h-r.y-r.h:r.y;
+        var hitH = y<=2.2 && y+r.h>=1.8 && x<=8.2 && x+r.w>=1.8;   // เส้นนอน y=2, x 2..8
+        var hitV = x<=2.2 && x+r.w>=1.8 && y<=8.2 && y+r.h>=1.8;   // เส้นตั้ง x=2, y 2..8
+        return hitH||hitV;
+      });
+    });
+  }
+  // allowTight: ผู้ใช้ติ๊ก “ขอบแคบ 2 มม.” — ใช้ขอบแคบเฉพาะเมื่อได้รูปเพิ่ม
+  // ถ้าไม่ได้ติ๊กแต่ขอบแคบจะได้มากกว่า เก็บจำนวนไว้ใน tightN เพื่อบอกผู้ใช้
+  function layFor(pp,d,allowTight){
+    var L=packAt(pp,d,MINM), Lt=packAt(pp,d,MINM_TIGHT);
+    var better=Lt && (!L || Lt.n>L.n);
+    if(better && allowTight) L=Lt;
+    else if(better && L) L.tightN=Lt.n;
+    if(L){ L.noCorners=cornersHit(pp,L.rects); return L }
+    // ขนาดรูปเท่ากระดาษพอดี (เช่น 4×6 เต็มภาพบนกระดาษ 4×6) — วางเต็มแผ่นไร้ขอบ ไม่มีเส้นตัด
+    function eq(a,b){ return Math.abs(a-b)<0.05 }
+    if(eq(d.w,pp.w)&&eq(d.h,pp.h)) return {rects:[{x:0,y:0,w:d.w,h:d.h,rot:0}], n:1, rotated:0, bleed:true};
+    if(eq(d.h,pp.w)&&eq(d.w,pp.h)) return {rects:[{x:0,y:0,w:d.h,h:d.w,rot:1}], n:1, rotated:1, bleed:true};
+    return null;
   }
   function paperName(key){ return key==='a4' ? T('paperNameA4') : T('paperName46') }
   function resolve(){
-    var sz=S(), ori=userOri, pk=userPaper, msg='';
-    var tries=[
-      [pk,ori,''],
-      [pk,ori==='p'?'l':'p',T('noticeRotate',ori)],
-      ['a4',ori,T('noticeSwitchA4')],
-      ['a4',ori==='p'?'l':'p',T('noticeSwitchA4Rotate')]
-    ];
-    for(var i=0;i<tries.length;i++){
-      var t=tries[i], d=dimsFor(sz,t[1]), L=layFor(PAPERS[t[0]],d);
+    var d=dimsFor(S(),el('ori').value), msg='', L=null;
+    var order=userPaper==='a4' ? ['a4'] : [userPaper,'a4'];
+    for(var i=0;i<order.length&&!L;i++){
+      L=layFor(PAPERS[order[i]],d,el('tight').checked);
       if(L){
-        if(el('paper').value!==t[0]) el('paper').value=t[0];
-        if(el('ori').value!==t[1])   el('ori').value=t[1];
-        CW=d.w; CHmm=d.h; CARD_A=CW/CHmm; CHr=CHmm/CW; LAY=L; msg=t[2];
-        break;
+        if(el('paper').value!==order[i]) el('paper').value=order[i];
+        if(order[i]!==userPaper) msg=T('noticeSwitchA4');
       }
     }
+    CW=d.w; CHmm=d.h; CARD_A=CW/CHmm; CHr=CHmm/CW; LAY=L;
+    if(L.tight) msg=(msg?msg+' · ':'')+T('noticeTight');
+    else if(L.tightN) msg=(msg?msg+' · ':'')+T('hintTight',L.n,L.tightN);
     var nt=el('notice');
     if(msg){ nt.textContent=msg; nt.hidden=false } else { nt.hidden=true }
-    var pp=P();
-    el('layoutinfo').textContent=T('layoutInfo',CW,CHmm,paperName(el('paper').value),LAY.n);
+    var pp=P(), pn=paperName(el('paper').value);
+    el('layoutinfo').textContent=T('layoutInfo',CW,CHmm,pn,LAY.n)+
+      (LAY.bleed ? T('layoutBleed') : LAY.rotated ? T('layoutRotated',LAY.rotated) : '');
+    el('print').textContent=T('btnPrintFor',pn);
     el('pagecss').textContent='@media print{@page{size:'+pp.w+'mm '+pp.h+'mm;margin:0}}';
   }
 
@@ -623,15 +777,28 @@
     var im=new Image(); im.onload=function(){res(im)};
     im.onerror=function(){rej(new Error('img'))}; im.src=src})}
 
-  function effA(p){ return (p.rot%180===0) ? p.w/p.h : p.h/p.w }
-  function cover(a){ return a>CARD_A ? {w:CHr*a,h:CHr} : {w:1,h:1/a} }
-  function elemD(p){ var V=cover(effA(p));
-    return (p.rot%180===0)? {w:V.w,h:V.h} : {w:V.h,h:V.w} }
-  function fitScale(p){ var V=cover(effA(p)); return Math.min(1/V.w, CHr/V.h) }
+  // ---------- เรขาคณิตรูปในกรอบ (หน่วย: ความกว้างกรอบ = 1, ความสูง = CHr) ----------
+  // p.rot เป็นองศาอิสระ (-180..180) — ขนาดฐานของรูป (scale 1) คำนวณให้รูปที่หมุนแล้วยังคลุมกรอบเต็ม ไม่มีมุมขาว
+  function normDeg(a){ a=((a+180)%360+360)%360-180; return a===-180?180:a }
+  function effA(p){ return (Math.round(p.rot/90)%2===0) ? p.w/p.h : p.h/p.w }
+  function geom(p){
+    var t=p.rot*Math.PI/180, c=Math.abs(Math.cos(t)), s=Math.abs(Math.sin(t)), a=p.w/p.h;
+    if(c<1e-9) c=0; if(s<1e-9) s=0;
+    var h=Math.max((c+CHr*s)/a, s+CHr*c);         // สูงพอให้ครอบกรอบที่หมุนแล้วทั้งสองแกน
+    return {w:h*a, h:h, c:c, s:s, t:t};
+  }
+  function elemD(p){ var g=geom(p); return {w:g.w,h:g.h} }
+  function fitScale(p){ var g=geom(p);
+    return Math.min(1/(g.w*g.c+g.h*g.s), CHr/(g.w*g.s+g.h*g.c)) }
   function clamp(p){
-    var V=cover(effA(p)), w=V.w*p.scale, h=V.h*p.scale;
-    var lx=Math.abs(w-1)/2*100, ly=Math.abs(h-CHr)/2/CHr*100;
-    p.dx=Math.max(-lx,Math.min(lx,p.dx)); p.dy=Math.max(-ly,Math.min(ly,p.dy));
+    // มุมทั้ง 4 ของกรอบต้องอยู่ในรูป → จำกัดระยะเลื่อนในแกนของรูป (หมุนตาม p.rot) แล้วแปลงกลับ
+    var g=geom(p), A=g.w*p.scale, B=g.h*p.scale;
+    var Lu=Math.abs(A-(g.c+CHr*g.s))/2, Lv=Math.abs(B-(g.s+CHr*g.c))/2;
+    var ct=Math.cos(g.t), st=Math.sin(g.t);
+    var ox=p.dx/100, oy=p.dy/100*CHr;
+    var u=ox*ct+oy*st, v=-ox*st+oy*ct;
+    u=Math.max(-Lu,Math.min(Lu,u)); v=Math.max(-Lv,Math.min(Lv,v));
+    p.dx=(u*ct-v*st)*100; p.dy=(u*st+v*ct)/CHr*100;
   }
 
   function perSheet(){ return LAY.n }
@@ -651,15 +818,14 @@
       var sh=document.createElement('div');
       sh.className='sheet';
       sh.style.width=pp.w+'mm'; sh.style.height=pp.h+'mm';
-      sh.style.gridTemplateColumns='repeat('+LAY.cols+','+CW+'mm)';
-      sh.style.gridTemplateRows='repeat('+LAY.rows+','+CHmm+'mm)';
-      sh.style.columnGap=GAP+'mm'; sh.style.rowGap=GAP+'mm';
       ['tl','tr','bl','br'].forEach(function(c){
         var m=document.createElement('span'); m.className='cmark '+c; sh.appendChild(m) });
       for(var i=0;i<K;i++){
-        var j=s*K+i;
+        var j=s*K+i, R=LAY.rects[i];
         var cd=document.createElement('div'); cd.className='card';
         cd.style.width=CW+'mm'; cd.style.height=CHmm+'mm'; cd.dataset.sheet=s;
+        cd.style.left=R.x+'mm'; cd.style.top=R.y+'mm';
+        if(R.rot){ cd.style.transform='translateX('+CHmm+'mm) rotate(90deg)'; cd.dataset.rot='1' }
         var im=document.createElement('img'); im.alt=''; cd.appendChild(im);
         if(j<slots.length){ cd.dataset.p=slots[j]; attachDrag(cd) }
         else { cd.classList.add('empty'); im.style.display='none' }
@@ -673,6 +839,8 @@
   }
   function applyToggles(){
     var mk=el('marks').checked, cn=el('corners').checked, rd=el('round').checked;
+    if(LAY.bleed){ mk=false; cn=false }                // เต็มแผ่นไร้ขอบ: ไม่มีที่ให้เส้นตัด/มุมกระดาษ
+    if(LAY.noCorners) cn=false;
     sheetEls.forEach(function(sh){
       sh.classList.toggle('marks',mk); sh.classList.toggle('corners',cn) });
     cardEls.forEach(function(cd){ cd.classList.toggle('round',rd) });
@@ -748,6 +916,7 @@
     el('z').min=Math.max(10,Math.round(fitScale(p)*100));
     el('z').value=Math.round(p.scale*100);
     el('zv').textContent=Math.round(p.scale*100)+'%';
+    el('rt').value=p.rot;
     el('rv').textContent=p.rot+'°';
     el('tip').hidden = Math.abs(effA(p)-CARD_A)/CARD_A < 0.25;
   }
@@ -784,9 +953,8 @@
   }
 
   el('fin').addEventListener('change',function(e){ addFiles(e.target.files); e.target.value='' });
-  ['size','ori','paper'].forEach(function(id){
+  ['size','ori','paper','tight'].forEach(function(id){
     el(id).addEventListener('change',function(){
-      if(id==='ori')   userOri=el('ori').value;
       if(id==='paper') userPaper=el('paper').value;
       cur=0; buildSheets(); renderStrip(); syncEditor();
     }) });
@@ -803,11 +971,15 @@
   ['marks','corners','round'].forEach(function(id){ el(id).addEventListener('change',applyToggles) });
   el('z').addEventListener('input',function(){
     edit(function(p){p.scale=parseInt(el('z').value,10)/100}) });
+  el('rt').addEventListener('input',function(){
+    edit(function(p){p.rot=normDeg(parseInt(el('rt').value,10))}) });
+  el('rt').addEventListener('dblclick',function(){
+    edit(function(p){p.rot=0}) });
   document.querySelectorAll('#editor button.mini[data-act]').forEach(function(b){
     b.addEventListener('click',function(){
       var a=b.dataset.act;
       if(a==='rot') edit(function(p){
-        p.rot=(((p.rot+parseInt(b.dataset.dir,10))%360)+360)%360; p.dx=0; p.dy=0; p.scale=1 });
+        p.rot=normDeg(p.rot+parseInt(b.dataset.dir,10)); p.dx=0; p.dy=0; p.scale=1 });
       else if(a==='fill')   edit(function(p){p.scale=1;p.dx=0;p.dy=0});
       else if(a==='fit')    edit(function(p){p.scale=fitScale(p);p.dx=0;p.dy=0});
       else if(a==='center') edit(function(p){p.dx=0;p.dy=0});
@@ -843,21 +1015,23 @@
 
   // ---------- ลากเลื่อนรูปในกรอบ ----------
   function attachDrag(cd){
-    var on=false,sx=0,sy=0,ox=0,oy=0,w=1,h=1,pi=-1;
+    var on=false,sx=0,sy=0,ox=0,oy=0,w=1,h=1,pi=-1,rot=cd.dataset.rot==='1';
     cd.addEventListener('pointerdown',function(e){
       pi=+cd.dataset.p; if(!photos[pi]) return;
       if(sel!==pi){ sel=pi; renderStrip(); syncEditor(); renderAllCards() }
       var sIdx=+cd.dataset.sheet;
       if(cur!==sIdx){ cur=sIdx; showSheet() }
       on=true; cd.setPointerCapture(e.pointerId);
-      var r=cd.getBoundingClientRect(); w=r.width; h=r.height;
+      // การ์ดที่วางเอียง 90° กรอบบนจอสลับกว้าง/สูง
+      var r=cd.getBoundingClientRect(); w=rot?r.height:r.width; h=rot?r.width:r.height;
       sx=e.clientX; sy=e.clientY; ox=photos[pi].dx; oy=photos[pi].dy;
       e.preventDefault();
     });
     cd.addEventListener('pointermove',function(e){
       if(!on) return;
-      var p=photos[pi];
-      p.dx=ox+(e.clientX-sx)/w*100; p.dy=oy+(e.clientY-sy)/h*100;
+      var p=photos[pi], mx=e.clientX-sx, my=e.clientY-sy;
+      if(rot){ var t=mx; mx=my; my=-t }                // แปลงทิศลากบนจอเป็นทิศในการ์ด (หมุน 90° ตามเข็ม)
+      p.dx=ox+mx/w*100; p.dy=oy+my/h*100;
       clamp(p); renderAllCards();
     });
     function end(e){ if(!on)return; on=false;
@@ -960,6 +1134,8 @@
     ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
     ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
     var round=el('round').checked, mk=el('marks').checked, cn=el('corners').checked;
+    if(LAY.bleed){ mk=false; cn=false }
+    if(LAY.noCorners) cn=false;
     var cw=CW*PPMM, ch=CHmm*PPMM, rad=round?3.18*PPMM:0;
 
     function rrect(c,x,y,w,h,r){
@@ -974,22 +1150,26 @@
       (function(i){
         var j=s*K+i;
         if(j>=slots.length) return;
-        var c=i%LAY.cols, r=Math.floor(i/LAY.cols);
-        var x=(LAY.mx+c*(CW+GAP))*PPMM, y=(LAY.my+r*(CHmm+GAP))*PPMM;
+        var R=LAY.rects[i];
+        // ย้ายจุดเริ่มไปที่มุมซ้ายบนของการ์ด (การ์ดวางเอียง: หมุน 90° แบบเดียวกับพรีวิว) แล้ววาดในพิกัดของการ์ด
+        function place(){
+          ctx.translate(R.x*PPMM,R.y*PPMM);
+          if(R.rot){ ctx.translate(ch,0); ctx.rotate(Math.PI/2) }
+        }
         var ph=photos[slots[j]];
         jobs.push(loadImage(ph.src).then(function(im){
-          ctx.save(); rrect(ctx,x,y,cw,ch,rad); ctx.clip();
+          ctx.save(); place(); rrect(ctx,0,0,cw,ch,rad); ctx.clip();
           var E=elemD(ph);
-          ctx.translate(x+cw/2+(ph.dx/100)*cw, y+ch/2+(ph.dy/100)*ch);
+          ctx.translate(cw/2+(ph.dx/100)*cw, ch/2+(ph.dy/100)*ch);
           ctx.rotate(ph.rot*Math.PI/180);
           ctx.scale(ph.scale,ph.scale);
           ctx.drawImage(im,-E.w*cw/2,-E.h*cw/2,E.w*cw,E.h*cw);
           ctx.restore();
         }));
         if(mk) jobs.push(Promise.resolve().then(function(){
-          var o=0.5*PPMM; ctx.save(); ctx.strokeStyle='#B5356B';
+          var o=0.5*PPMM; ctx.save(); place(); ctx.strokeStyle='#B5356B';
           ctx.lineWidth=Math.max(1,0.2*PPMM); ctx.setLineDash([2.2*PPMM,1.6*PPMM]);
-          rrect(ctx,x-o,y-o,cw+2*o,ch+2*o,rad?rad+o:0); ctx.stroke(); ctx.restore();
+          rrect(ctx,-o,-o,cw+2*o,ch+2*o,rad?rad+o:0); ctx.stroke(); ctx.restore();
         }));
       })(i);
     }
@@ -1141,7 +1321,41 @@
     }).catch(function(e){ say(e&&e.code==='declined'?T('cancelledSave'):T('pdfFailed')) })
       .then(function(){ busy(false) });
   });
-  el('print').addEventListener('click',function(){ window.print() });
+  // ---------- พิมพ์: เตือนเลือกกระดาษก่อน ----------
+  // หน้าเว็บบังคับให้เครื่องพิมพ์เลือกกระดาษเองไม่ได้ จึงบอกขนาดให้ชัดก่อนเปิดหน้าต่างพิมพ์
+  var pd=el('printdlg');
+  function openPrintDlg(){
+    if(!guard()) return;
+    var a4=el('paper').value==='a4';
+    el('pdPaper').innerHTML=T('pdPaper', a4?'A4':'4×6 in', a4?T('pdPaperSubA4'):T('pdPaperSub46'));
+    el('pdSteps').innerHTML=T('pdSteps',LAY.bleed).map(function(s){ return '<li>'+s+'</li>' }).join('');
+    pd.hidden=false; el('pdPdf').focus();
+  }
+  function closePrintDlg(){ pd.hidden=true; el('print').focus() }
+  el('print').addEventListener('click',openPrintDlg);
+  el('pdCancel').addEventListener('click',closePrintDlg);
+  pd.addEventListener('click',function(e){ if(e.target===pd) closePrintDlg() });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!pd.hidden) closePrintDlg() });
+  el('pdBrowser').addEventListener('click',function(){ pd.hidden=true; window.print() });
+  el('pdPdf').addEventListener('click',function(){
+    pd.hidden=true;
+    // เปิดแท็บตอนคลิกทันที (ไม่งั้นโดนบล็อกป๊อปอัป) แล้วค่อยใส่ PDF หลังสร้างเสร็จ
+    var win=null; try{ win=window.open('','_blank') }catch(e){}
+    busy(true);
+    allSheets(dpi(),function(i,n){ say(T('creatingSheet',i,n)) }).then(function(rs){
+      say(T('mergingPdf'));
+      var blob=buildPDF(rs);
+      if(win){
+        win.location.href=URL.createObjectURL(blob);
+        say(T('openingPdf'));
+        return;
+      }
+      return saveBlob(blob, base()+'.pdf').then(function(){ say(T('popupBlocked')) });
+    }).catch(function(e){
+      if(win) try{win.close()}catch(err){}
+      say(e&&e.code==='declined'?T('cancelledSave'):T('pdfFailed'));
+    }).then(function(){ busy(false) });
+  });
 
   el('langToggle').addEventListener('click',function(){ setLang(LANG==='th'?'en':'th') });
 
