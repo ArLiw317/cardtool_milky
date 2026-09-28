@@ -192,6 +192,8 @@
 
   /* ---------- โหมดวางอิสระ ---------- */
   .card.fitem{cursor:move;touch-action:none}
+  body.fpan .card.fitem{cursor:grab}
+  button.mini.on{background:var(--reg-soft);color:var(--reg);border-color:var(--reg)}
   .card.fitem img{max-width:none}
   /* จุดลากปรับขนาดมุมขวาล่าง — ขนาดชดเชยซูมพรีวิวให้กดง่ายเท่าเดิม */
   .fh{position:absolute;right:0;bottom:0;width:calc(16px / var(--z,1));height:calc(16px / var(--z,1));
@@ -348,7 +350,7 @@
       <details class="sec free-only" open>
         <summary><span data-i18n="secFreeItem">รูปบนแผ่น</span> <span class="n" id="fselname"></span></summary>
         <div class="secbody">
-          <div class="info" id="fhint" data-i18n="freeHint">คลิกรูปในแถบ “รูปภาพ” เพื่อเพิ่มลงแผ่นนี้ แล้วลากเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด</div>
+          <div class="info" id="fhint" data-i18n="freeHint">คลิกรูปในแถบ “รูปภาพ” เพื่อเพิ่มลงแผ่นนี้</div>
           <div class="editor" id="feditor">
             <div class="secbody" style="padding:0">
               <div class="mmrow">
@@ -357,7 +359,7 @@
                 <label class="field"><span data-i18n="lblXmm">ซ้าย X (มม.)</span><input type="number" id="fx" min="0" step="0.5" inputmode="decimal"></label>
                 <label class="field"><span data-i18n="lblYmm">บน Y (มม.)</span><input type="number" id="fy" min="0" step="0.5" inputmode="decimal"></label>
               </div>
-              <label class="field"><span data-i18n="lblPreset">ย่อ/ขยายให้พอดีขนาด</span>
+              <label class="field"><span data-i18n="lblPreset">ตั้งขนาดกรอบ</span>
                 <select id="fpreset">
                   <option value="" data-i18n="optPresetPick">เลือกขนาด…</option>
                   <option value="card" data-i18n="optSizeCard">การ์ด — 55 × 86</option>
@@ -370,11 +372,12 @@
                 </select>
               </label>
               <div class="row">
-                <label class="lbl" data-i18n="lblRotate">หมุน</label>
+                <label class="lbl" data-i18n="lblRotFrame">หมุนกรอบ</label>
                 <button class="mini" id="fRotL" data-i18n="btnRotL">↺ ซ้าย</button>
                 <button class="mini" id="fRotR" data-i18n="btnRotR">↻ ขวา</button>
               </div>
               <div class="row">
+                <button class="mini" id="fPan" data-i18n="btnPan" data-i18n-title="panHint" title="หรือกด Ctrl ค้างแล้วลาก">เลื่อนรูปในกรอบ</button>
                 <button class="mini" id="fDup" data-i18n="btnDup">ทำสำเนา</button>
                 <button class="mini" id="fDel" data-i18n="btnDelItem">เอาออกจากแผ่น</button>
               </div>
@@ -384,7 +387,7 @@
         </div>
       </details>
 
-      <details class="sec auto-only" open>
+      <details class="sec" open>
         <summary><span data-i18n="secEditPhoto">ปรับแต่งรูป</span> <span class="n" id="selname" data-i18n="noSelection">ยังไม่ได้เลือก</span></summary>
         <div class="secbody editor off" id="editor">
           <div class="tip" id="tip" hidden data-i18n="tipRatioMismatch">สัดส่วนรูปไม่ตรงกับกรอบ — ลองหมุน 90° หรือกด “เห็นทั้งรูป”</div>
@@ -547,10 +550,11 @@
       modeAuto:'จัดอัตโนมัติ', modeFree:'วางอิสระ',
       lblPaperOri:'แนวกระดาษ', btnAddAll:'ใส่ทุกรูปลงแผ่นนี้', btnAddSheet:'+ เพิ่มแผ่น', btnDelSheet:'ลบแผ่นนี้',
       secFreeItem:'รูปบนแผ่น',
-      freeHint:'คลิกรูปในแถบ “รูปภาพ” เพื่อเพิ่มลงแผ่นนี้ แล้วลากเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด (กด Alt ค้างขณะลากเพื่อปิดการดูดติด)',
+      freeHint:'คลิกรูปในแถบ “รูปภาพ” เพื่อเพิ่มลงแผ่นนี้ · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
+      lblRotFrame:'หมุนกรอบ', btnPan:'เลื่อนรูปในกรอบ', panHint:'หรือกด Ctrl ค้างแล้วลาก',
       freeSheetHint:'คลิกรูปในแถบซ้ายเพื่อวางลงแผ่นนี้',
       lblWmm:'กว้าง (มม.)', lblHmm:'สูง (มม.)', lblXmm:'ซ้าย X (มม.)', lblYmm:'บน Y (มม.)',
-      lblPreset:'ย่อ/ขยายให้พอดีขนาด', optPresetPick:'เลือกขนาด…', optPresetPage:'เต็มพื้นที่พิมพ์ของแผ่น',
+      lblPreset:'ตั้งขนาดกรอบ', optPresetPick:'เลือกขนาด…', optPresetPage:'เต็มพื้นที่พิมพ์ของแผ่น',
       btnDup:'ทำสำเนา', btnDelItem:'เอาออกจากแผ่น',
       tipNearEdge:'รูปอยู่ห่างขอบกระดาษไม่ถึง 3 มม. — เครื่องที่พิมพ์ชิดขอบได้แค่ 3 มม. (เช่น Epson L3350) จะพิมพ์ส่วนนั้นไม่ติด',
       freeInfo:function(paper,land,n){ return 'วางอิสระ · '+paper+' แนว'+(land?'นอน':'ตั้ง')+' · '+n+' รูปในแผ่นนี้' },
@@ -657,10 +661,11 @@
       modeAuto:'Auto layout', modeFree:'Free layout',
       lblPaperOri:'Paper orientation', btnAddAll:'Add all photos to this sheet', btnAddSheet:'+ Add sheet', btnDelSheet:'Delete this sheet',
       secFreeItem:'Photo on sheet',
-      freeHint:'Click a photo in “Photos” to add it to this sheet, drag to move, drag the bottom-right corner to resize (hold Alt while dragging to turn off snapping)',
+      freeHint:'Click a photo in “Photos” to add it to this sheet · drag = move frame · bottom-right corner = resize · Ctrl+drag = pan photo inside the frame · hold Alt = no snapping',
+      lblRotFrame:'Rotate frame', btnPan:'Pan photo in frame', panHint:'Or hold Ctrl and drag',
       freeSheetHint:'Click a photo in the sidebar to place it on this sheet',
       lblWmm:'Width (mm)', lblHmm:'Height (mm)', lblXmm:'Left X (mm)', lblYmm:'Top Y (mm)',
-      lblPreset:'Resize to fit', optPresetPick:'Choose a size…', optPresetPage:'Whole printable area',
+      lblPreset:'Set frame size', optPresetPick:'Choose a size…', optPresetPage:'Whole printable area',
       btnDup:'Duplicate', btnDelItem:'Remove from sheet',
       tipNearEdge:'This photo is less than 3 mm from the paper edge — printers limited to 3 mm (e.g. Epson L3350) won’t print that part',
       freeInfo:function(paper,land,n){ return 'Free · '+paper+' '+(land?'landscape':'portrait')+' · '+n+' on this sheet' },
@@ -899,24 +904,27 @@
   // p.rot เป็นองศาอิสระ (-180..180) — ขนาดฐานของรูป (scale 1) คำนวณให้รูปที่หมุนแล้วยังคลุมกรอบเต็ม ไม่มีมุมขาว
   function normDeg(a){ a=((a+180)%360+360)%360-180; return a===-180?180:a }
   function effA(p){ return (Math.round(p.rot/90)%2===0) ? p.w/p.h : p.h/p.w }
-  function geom(p){
+  // hr = สัดส่วน สูง/กว้าง ของกรอบ — ไม่ส่งมา = กรอบของโหมดจัดอัตโนมัติ (CHr)
+  function geom(p,hr){
+    if(hr==null) hr=CHr;
     var t=p.rot*Math.PI/180, c=Math.abs(Math.cos(t)), s=Math.abs(Math.sin(t)), a=p.w/p.h;
     if(c<1e-9) c=0; if(s<1e-9) s=0;
-    var h=Math.max((c+CHr*s)/a, s+CHr*c);         // สูงพอให้ครอบกรอบที่หมุนแล้วทั้งสองแกน
+    var h=Math.max((c+hr*s)/a, s+hr*c);           // สูงพอให้ครอบกรอบที่หมุนแล้วทั้งสองแกน
     return {w:h*a, h:h, c:c, s:s, t:t};
   }
-  function elemD(p){ var g=geom(p); return {w:g.w,h:g.h} }
-  function fitScale(p){ var g=geom(p);
-    return Math.min(1/(g.w*g.c+g.h*g.s), CHr/(g.w*g.s+g.h*g.c)) }
-  function clamp(p){
+  function elemD(p,hr){ var g=geom(p,hr); return {w:g.w,h:g.h} }
+  function fitScale(p,hr){ if(hr==null) hr=CHr; var g=geom(p,hr);
+    return Math.min(1/(g.w*g.c+g.h*g.s), hr/(g.w*g.s+g.h*g.c)) }
+  function clamp(p,hr){
     // มุมทั้ง 4 ของกรอบต้องอยู่ในรูป → จำกัดระยะเลื่อนในแกนของรูป (หมุนตาม p.rot) แล้วแปลงกลับ
-    var g=geom(p), A=g.w*p.scale, B=g.h*p.scale;
-    var Lu=Math.abs(A-(g.c+CHr*g.s))/2, Lv=Math.abs(B-(g.s+CHr*g.c))/2;
+    if(hr==null) hr=CHr;
+    var g=geom(p,hr), A=g.w*p.scale, B=g.h*p.scale;
+    var Lu=Math.abs(A-(g.c+hr*g.s))/2, Lv=Math.abs(B-(g.s+hr*g.c))/2;
     var ct=Math.cos(g.t), st=Math.sin(g.t);
-    var ox=p.dx/100, oy=p.dy/100*CHr;
+    var ox=p.dx/100, oy=p.dy/100*hr;
     var u=ox*ct+oy*st, v=-ox*st+oy*ct;
     u=Math.max(-Lu,Math.min(Lu,u)); v=Math.max(-Lv,Math.min(Lv,v));
-    p.dx=(u*ct-v*st)*100; p.dy=(u*st+v*ct)/CHr*100;
+    p.dx=(u*ct-v*st)*100; p.dy=(u*st+v*ct)/hr*100;
   }
 
   function perSheet(){ return LAY.n }
@@ -1045,25 +1053,32 @@
     if(sel>=photos.length) sel=photos.length-1;
     buildSheets(); renderStrip(); syncEditor();
   }
+  // สิ่งที่ “ปรับแต่งรูป” กำลังแก้: โหมดอัตโนมัติ = รูปที่เลือก (ใช้กรอบกลาง CHr)
+  // โหมดวางอิสระ = ค่าครอปของชิ้นที่เลือก (it.c) กับกรอบของชิ้นนั้นเอง
+  function edTarget(){
+    if(MODE==='free') return fsel ? {p:fsel.c, hr:fsel.h/fsel.w, idx:photos.indexOf(photoById(fsel.pid))} : null;
+    return (sel>=0&&photos[sel]) ? {p:photos[sel], hr:CHr, idx:sel} : null;
+  }
   function syncEditor(){
     syncFree();
-    var on=sel>=0&&photos[sel];
-    el('editor').classList.toggle('off',!on);
-    if(!on){ el('selname').textContent=T('noSelection'); return }
-    var p=photos[sel];
-    var nm=p.name.length>18?p.name.slice(0,16)+'…':p.name;
-    el('selname').textContent=T('photoLabel',sel+1,nm);
-    el('z').min=Math.max(10,Math.round(fitScale(p)*100));
+    var tg=edTarget();
+    el('editor').classList.toggle('off',!tg);
+    if(!tg){ el('selname').textContent=T('noSelection'); return }
+    var p=tg.p, ph=photos[tg.idx]||{name:''};
+    var nm=ph.name.length>18?ph.name.slice(0,16)+'…':ph.name;
+    el('selname').textContent=T('photoLabel',tg.idx+1,nm);
+    el('z').min=Math.max(10,Math.round(fitScale(p,tg.hr)*100));
     el('z').value=Math.round(p.scale*100);
     el('zv').textContent=Math.round(p.scale*100)+'%';
     el('rt').value=p.rot;
     el('rv').textContent=p.rot+'°';
-    el('tip').hidden = Math.abs(effA(p)-CARD_A)/CARD_A < 0.25;
+    el('tip').hidden = Math.abs(effA(p)*tg.hr-1) < 0.25;
   }
   function edit(fn){
-    if(sel<0||!photos[sel]) return;
-    fn(photos[sel]); clamp(photos[sel]);
-    renderAllCards(); syncEditor();
+    var tg=edTarget(); if(!tg) return;
+    fn(tg.p,tg.hr); clamp(tg.p,tg.hr);
+    if(MODE==='free') renderFreeSel(); else renderAllCards();
+    syncEditor();
   }
 
   function addFiles(list){
@@ -1122,8 +1137,15 @@
       if(a==='rot') edit(function(p){
         p.rot=normDeg(p.rot+parseInt(b.dataset.dir,10)); p.dx=0; p.dy=0; p.scale=1 });
       else if(a==='fill')   edit(function(p){p.scale=1;p.dx=0;p.dy=0});
-      else if(a==='fit')    edit(function(p){p.scale=fitScale(p);p.dx=0;p.dy=0});
+      else if(a==='fit')    edit(function(p,hr){p.scale=fitScale(p,hr);p.dx=0;p.dy=0});
       else if(a==='center') edit(function(p){p.dx=0;p.dy=0});
+      else if(a==='applyall' && MODE==='free'){
+        if(!fsel) return;
+        var c=fsel.c;                                     // ใช้ค่าครอปนี้กับทุกชิ้นทุกแผ่น
+        FREE.sheets.forEach(function(sh){ sh.items.forEach(function(it){
+          it.c.rot=c.rot; it.c.scale=c.scale; it.c.dx=c.dx; it.c.dy=c.dy; clamp(it.c,it.h/it.w) }) });
+        buildFree(); syncEditor(); say(T('appliedToAll'));
+      }
       else if(a==='applyall'){
         if(sel<0||!photos[sel]) return;
         var s=photos[sel];
@@ -1135,10 +1157,11 @@
 
   // ======================================================================
   // ---------- โหมดวางอิสระ ----------
-  // รูปแต่ละชิ้น (item) = {pid, x, y, s, rot} — x,y มุมซ้ายบนของกรอบบนกระดาษ (มม.)
-  // s = ความกว้างของรูปก่อนหมุน (มม.) ล็อกสัดส่วนตามรูปจริงเสมอ, rot หมุนทีละ 90°
+  // รูปแต่ละชิ้น (item) = {pid, x, y, w, h, c}
+  //   x,y,w,h = กรอบบนกระดาษ (มม.) — ขนาดอะไรก็ได้
+  //   c = ค่าครอปของรูปในกรอบ {w,h (พิกเซลรูปจริง), rot, scale, dx, dy} แบบเดียวกับโหมดอัตโนมัติ แยกแต่ละชิ้น
   // ======================================================================
-  var MODE='auto', PID=0, fsel=null, SNAP=1.5;
+  var MODE='auto', PID=0, fsel=null, SNAP=1.5, fpan=false;
   var FREE={paper:'p46', land:true, sheets:[{items:[]}]};
 
   function curPaper(){
@@ -1150,19 +1173,15 @@
     for(var i=0;i<photos.length;i++) if(photos[i].id===id) return photos[i];
     return null;
   }
-  function aspectOf(it){ var p=photoById(it.pid); return p ? p.w/p.h : 1 }
-  function fp(it){                                     // ขนาดกรอบบนกระดาษ (หลังหมุน)
-    var a=aspectOf(it);
-    return it.rot%180===0 ? {w:it.s,h:it.s/a} : {w:it.s/a,h:it.s};
-  }
-  function setFpW(it,w){ it.s = it.rot%180===0 ? w : w*aspectOf(it) }
-  function setFpH(it,h){ it.s = it.rot%180===0 ? h*aspectOf(it) : h }
-  function fitBox(it,bw,bh){ var f=fp(it); it.s*=Math.min(bw/f.w,bh/f.h) }
+  function fp(it){ return {w:it.w,h:it.h} }
+  function fitBox(it,bw,bh){ var k=Math.min(bw/it.w,bh/it.h); it.w*=k; it.h*=k }   // ย่อ/ขยายคงทรง
   function clampItem(it){
-    var pp=curPaper(), f=fp(it);
-    if(f.w>pp.w+1e-6||f.h>pp.h+1e-6){ fitBox(it,pp.w,pp.h); f=fp(it) }
-    it.x=Math.max(0,Math.min(pp.w-f.w,it.x));
-    it.y=Math.max(0,Math.min(pp.h-f.h,it.y));
+    var pp=curPaper();
+    it.w=Math.max(5,it.w); it.h=Math.max(5,it.h);
+    if(it.w>pp.w+1e-6||it.h>pp.h+1e-6) fitBox(it,pp.w,pp.h);
+    it.x=Math.max(0,Math.min(pp.w-it.w,it.x));
+    it.y=Math.max(0,Math.min(pp.h-it.h,it.y));
+    clamp(it.c,it.h/it.w);                              // กรอบเปลี่ยนทรง → ตรวจระยะเลื่อนรูปในกรอบใหม่
   }
   function itemRect(it){ var f=fp(it); return {x:it.x,y:it.y,w:f.w,h:f.h} }
   function freeCornersHit(s){
@@ -1184,9 +1203,16 @@
     return null;
   }
   function newItem(pid){
-    var pp=curPaper(), it={pid:pid,x:MINM,y:MINM,s:100,rot:0};
-    fitBox(it,(pp.w-2*MINM)/2,(pp.h-2*MINM)/2);          // เริ่มที่ราวครึ่งพื้นที่พิมพ์
+    // กรอบเริ่มต้นเท่าสัดส่วนรูป ขนาดราวครึ่งพื้นที่พิมพ์ → เห็นทั้งรูปพอดีกรอบ
+    var pp=curPaper(), ph=photoById(pid);
+    var it={pid:pid,x:MINM,y:MINM,w:100,h:100*ph.h/ph.w,
+            c:{w:ph.w,h:ph.h,rot:0,scale:1,dx:0,dy:0}};
+    fitBox(it,(pp.w-2*MINM)/2,(pp.h-2*MINM)/2);
     return it;
+  }
+  function copyItem(it){
+    return {pid:it.pid,x:it.x,y:it.y,w:it.w,h:it.h,
+            c:{w:it.c.w,h:it.c.h,rot:it.c.rot,scale:it.c.scale,dx:it.c.dx,dy:it.c.dy}};
   }
   function placeOn(items,it){                            // true = เจอที่ว่าง
     var sp=findSpot(items,fp(it),it);
@@ -1197,7 +1223,7 @@
     var sh=FREE.sheets[cur], it=newItem(photos[i].id);
     if(!placeOn(sh.items,it)) say(T('noRoom'));
     sh.items.push(it); fsel=it;
-    buildFree(); renderStrip(); syncFree();
+    buildFree(); renderStrip(); syncEditor();
   }
   // ดูดติดขอบกระดาษ / ขอบพื้นที่พิมพ์ / กึ่งกลาง / ขอบรูปอื่น (ชิดกัน หรือเว้น GAP)
   function snapPos(it,nx,ny,f){
@@ -1215,17 +1241,21 @@
   }
   function r1(v){ return Math.round(v*10)/10 }
 
+  // วาดรูปในกรอบแบบเดียวกับ renderCard ของโหมดอัตโนมัติ แต่ใช้ขนาดกรอบของชิ้นนี้
   function renderItem(cd){
-    var it=cd._it, p=photoById(it.pid), f=fp(it), im=cd.querySelector('img');
+    var it=cd._it, p=photoById(it.pid), c=it.c, im=cd.querySelector('img');
     cd.style.left=it.x+'mm'; cd.style.top=it.y+'mm';
-    cd.style.width=f.w+'mm'; cd.style.height=f.h+'mm';
+    cd.style.width=it.w+'mm'; cd.style.height=it.h+'mm';
     if(p){
       if(im.getAttribute('src')!==p.src) im.src=p.src;
-      im.style.width=it.s+'mm'; im.style.height=(it.s/(p.w/p.h))+'mm';
-      im.style.transform='rotate('+it.rot+'deg) translate(-50%,-50%)';
+      var FW=it.w*PXMM, FH=it.h*PXMM, E=elemD(c,it.h/it.w);
+      im.style.width=(E.w*FW)+'px'; im.style.height=(E.h*FW)+'px';
+      im.style.transform='translate('+(c.dx/100*FW)+'px,'+(c.dy/100*FH)+'px) '+
+                         'rotate('+c.rot+'deg) scale('+c.scale+') translate(-50%,-50%)';
     }
     cd.classList.toggle('pick',it===fsel);
   }
+  function renderFreeSel(){ cardEls.forEach(function(cd){ if(cd._it===fsel) renderItem(cd) }) }
   function markPick(){ cardEls.forEach(function(cd){ cd.classList.toggle('pick',cd._it===fsel) }) }
 
   function buildFree(){
@@ -1252,7 +1282,7 @@
       // คลิกพื้นที่ว่างของแผ่น = เลือกแผ่นนี้ และยกเลิกการเลือกรูป
       sh.addEventListener('pointerdown',function(e){
         if(e.target!==sh) return;
-        cur=s; fsel=null; markPick(); showSheet(); syncFree(); renderStrip();
+        cur=s; fsel=null; markPick(); showSheet(); syncEditor(); renderStrip();
       });
       stack.appendChild(sh); sheetEls.push(sh);
     });
@@ -1264,35 +1294,42 @@
   }
 
   function attachFree(cd,s){
-    var on=false, mode='', sx=0, sy=0, x0=0, y0=0, f0=null;
+    var on=false, mode='', sx=0, sy=0, x0=0, y0=0, f0=null, odx=0, ody=0, rw=1, rh=1;
     cd.addEventListener('pointerdown',function(e){
       var it=cd._it;
-      fsel=it; cur=s; markPick(); showSheet(); syncFree(); renderStrip();
-      mode=e.target.classList.contains('fh') ? 'resize' : 'move';
+      fsel=it; cur=s; markPick(); showSheet(); syncEditor(); renderStrip();
+      // มุมขวาล่าง = ปรับขนาดกรอบ · Ctrl+ลาก หรือเปิดปุ่ม “เลื่อนรูปในกรอบ” = เลื่อนรูปข้างใน · ลากปกติ = ย้ายกรอบ
+      mode=e.target.classList.contains('fh') ? 'resize' : (e.ctrlKey||fpan) ? 'pan' : 'move';
       on=true; cd.setPointerCapture(e.pointerId);
-      sx=e.clientX; sy=e.clientY; x0=it.x; y0=it.y; f0=fp(it);
+      sx=e.clientX; sy=e.clientY; x0=it.x; y0=it.y; f0=fp(it); odx=it.c.dx; ody=it.c.dy;
+      var r=cd.getBoundingClientRect(); rw=r.width; rh=r.height;
       e.preventDefault(); e.stopPropagation();
     });
     cd.addEventListener('pointermove',function(e){
       if(!on) return;
       var it=cd._it, pp=curPaper(), k=1/(PXMM*zoomVal);   // px บนจอ → มม. บนกระดาษ
       var dx=(e.clientX-sx)*k, dy=(e.clientY-sy)*k;
+      if(mode==='pan'){
+        it.c.dx=odx+(e.clientX-sx)/rw*100; it.c.dy=ody+(e.clientY-sy)/rh*100;
+        clamp(it.c,it.h/it.w); renderItem(cd);
+        return;
+      }
       if(mode==='move'){
         var nx=x0+dx, ny=y0+dy;
         if(!e.altKey){ var sp=snapPos(it,nx,ny,f0); nx=sp.x; ny=sp.y }
         it.x=nx; it.y=ny;
       } else {
-        var fa=f0.w/f0.h;                                  // ล็อกสัดส่วน: ใช้แกนที่ลากมากกว่า
+        var fa=f0.w/f0.h;                                  // คงทรงกรอบ: ใช้แกนที่ลากมากกว่า
         var w=Math.max(f0.w+dx,(f0.h+dy)*fa,5);
         w=Math.min(w,pp.w-it.x,(pp.h-it.y)*fa);
-        setFpW(it,w);
-        var f=fp(it); say(T('itemSize',r1(f.w),r1(f.h)));
+        it.w=w; it.h=w/fa;
+        say(T('itemSize',r1(it.w),r1(it.h)));
       }
       clampItem(it); renderItem(cd); syncFree();
     });
     function end(e){ if(!on) return; on=false;
       try{cd.releasePointerCapture(e.pointerId)}catch(err){}
-      applyToggles(); }
+      applyToggles(); syncEditor(); }
     cd.addEventListener('pointerup',end);
     cd.addEventListener('pointercancel',end);
   }
@@ -1314,56 +1351,66 @@
   function freeEdit(fn){
     if(!fsel) return;
     fn(fsel); clampItem(fsel);
-    buildFree(); renderStrip(); syncFree();
+    buildFree(); renderStrip(); syncEditor();
   }
   function numVal(id){ var v=parseFloat(el(id).value); return isFinite(v)?v:null }
-  el('fw').addEventListener('change',function(){ var v=numVal('fw'); if(v>0) freeEdit(function(it){ setFpW(it,Math.max(5,v)) }) });
-  el('fhgt').addEventListener('change',function(){ var v=numVal('fhgt'); if(v>0) freeEdit(function(it){ setFpH(it,Math.max(5,v)) }) });
+  // พิมพ์กว้าง/สูง แยกกันได้ — กรอบเปลี่ยนทรง รูปข้างในจัดตามค่าครอป (เต็มกรอบ/เห็นทั้งรูป)
+  el('fw').addEventListener('change',function(){ var v=numVal('fw'); if(v>0) freeEdit(function(it){ it.w=v }) });
+  el('fhgt').addEventListener('change',function(){ var v=numVal('fhgt'); if(v>0) freeEdit(function(it){ it.h=v }) });
   el('fx').addEventListener('change',function(){ var v=numVal('fx'); if(v!==null) freeEdit(function(it){ it.x=v }) });
   el('fy').addEventListener('change',function(){ var v=numVal('fy'); if(v!==null) freeEdit(function(it){ it.y=v }) });
   el('fpreset').addEventListener('change',function(){
     var k=el('fpreset').value; el('fpreset').value='';
     if(!k) return;
     freeEdit(function(it){
-      var pp=curPaper(), bw, bh;
-      if(k==='page'){ bw=pp.w-2*MINM; bh=pp.h-2*MINM }
-      else {                                             // วางกรอบสำเร็จให้แนวเดียวกับรูป
-        var z=SIZES[k], f=fp(it), land=f.w>f.h;
-        bw=land?Math.max(z.w,z.h):Math.min(z.w,z.h); bh=land?Math.min(z.w,z.h):Math.max(z.w,z.h);
+      var pp=curPaper();
+      if(k==='page'){                                    // เต็มพื้นที่พิมพ์ของแผ่น
+        it.x=MINM; it.y=MINM; it.w=pp.w-2*MINM; it.h=pp.h-2*MINM; return;
       }
-      fitBox(it,bw,bh);
+      // ขนาดสำเร็จเป๊ะ — วางแนวเดียวกับกรอบเดิม (กรอบนอน → ขนาดแนวนอน)
+      var z=SIZES[k], land=it.w>it.h, a=Math.max(z.w,z.h), b=Math.min(z.w,z.h);
+      it.w=land?a:b; it.h=land?b:a;
     });
   });
+  // หมุนกรอบ 90° รอบจุดกึ่งกลาง — รูปข้างในหมุนตามไปด้วย ภาพไม่เปลี่ยน
   function rotItem(d){
     freeEdit(function(it){
-      var f0=fp(it), cx=it.x+f0.w/2, cy=it.y+f0.h/2;       // หมุนรอบจุดกึ่งกลาง
-      it.rot=((it.rot+d)%360+360)%360;
-      var f1=fp(it); it.x=cx-f1.w/2; it.y=cy-f1.h/2;
+      var cx=it.x+it.w/2, cy=it.y+it.h/2, c=it.c;
+      var ox=c.dx/100*it.w, oy=c.dy/100*it.h;             // ระยะเลื่อนรูปเป็น มม.
+      var t=it.w; it.w=it.h; it.h=t;
+      it.x=cx-it.w/2; it.y=cy-it.h/2;
+      var nx= d>0 ? -oy : oy, ny= d>0 ? ox : -ox;          // หมุนเวกเตอร์ตามกรอบ
+      c.dx=nx/it.w*100; c.dy=ny/it.h*100;
+      c.rot=normDeg(c.rot+d);
     });
   }
   el('fRotL').addEventListener('click',function(){ rotItem(-90) });
   el('fRotR').addEventListener('click',function(){ rotItem(90) });
+  el('fPan').addEventListener('click',function(){
+    fpan=!fpan; el('fPan').classList.toggle('on',fpan); document.body.classList.toggle('fpan',fpan);
+  });
   el('fDup').addEventListener('click',function(){
     if(!fsel) return;
-    var sh=FREE.sheets[cur], c={pid:fsel.pid,x:fsel.x+5,y:fsel.y+5,s:fsel.s,rot:fsel.rot};
+    var sh=FREE.sheets[cur], c=copyItem(fsel);
+    c.x+=5; c.y+=5;
     if(!placeOn(sh.items,c)) say(T('noRoom'));
     sh.items.push(c); fsel=c;
-    buildFree(); renderStrip(); syncFree();
+    buildFree(); renderStrip(); syncEditor();
   });
   function delItem(){
     if(!fsel) return;
     FREE.sheets.forEach(function(sh){ sh.items=sh.items.filter(function(it){ return it!==fsel }) });
-    fsel=null; buildFree(); renderStrip(); syncFree();
+    fsel=null; buildFree(); renderStrip(); syncEditor();
   }
   el('fDel').addEventListener('click',delItem);
   el('fAddSheet').addEventListener('click',function(){
     FREE.sheets.push({items:[]}); cur=FREE.sheets.length-1; fsel=null;
-    buildFree(); renderStrip(); syncFree(); scrollToCurrent();
+    buildFree(); renderStrip(); syncEditor(); scrollToCurrent();
   });
   el('fDelSheet').addEventListener('click',function(){
     if(FREE.sheets.length>1) FREE.sheets.splice(cur,1);
     else FREE.sheets[0].items=[];
-    fsel=null; buildFree(); renderStrip(); syncFree();
+    fsel=null; buildFree(); renderStrip(); syncEditor();
   });
   // ใส่ทุกรูป: วางต่อกันในที่ว่าง ถ้าแผ่นเต็มเปิดแผ่นใหม่ให้เอง
   el('fAddAll').addEventListener('click',function(){
@@ -1376,12 +1423,12 @@
       }
       FREE.sheets[cur].items.push(it); fsel=it;
     });
-    buildFree(); renderStrip(); syncFree();
+    buildFree(); renderStrip(); syncEditor();
   });
   ['fpaper','fori'].forEach(function(id){
     el(id).addEventListener('change',function(){
       FREE.paper=el('fpaper').value; FREE.land=el('fori').value==='l';
-      buildFree(); renderStrip(); syncFree();
+      buildFree(); renderStrip(); syncEditor();
     });
   });
   // ลูกศร = เลื่อน 0.5 มม. (Shift = 5 มม.), Delete = เอาออก
@@ -1590,15 +1637,17 @@
       })(i);
     }
 
-    // โหมดวางอิสระ: รูปทั้งใบ (ไม่ครอป) หมุนทีละ 90° อยู่กลางกรอบของมัน
+    // โหมดวางอิสระ: กรอบขนาดของแต่ละชิ้น รูปข้างในครอปตามค่าของชิ้นนั้น (เหมือนโหมดอัตโนมัติ)
     if(free) FREE.sheets[s].items.forEach(function(it){
       var ph=photoById(it.pid); if(!ph) return;
-      var f=fp(it), x=it.x*PPMM, y=it.y*PPMM, w=f.w*PPMM, h=f.h*PPMM;
+      var c=it.c, x=it.x*PPMM, y=it.y*PPMM, w=it.w*PPMM, h=it.h*PPMM;
       jobs.push(loadImage(ph.src).then(function(im){
         ctx.save(); rrect(ctx,x,y,w,h,rad); ctx.clip();
-        ctx.translate(x+w/2,y+h/2); ctx.rotate(it.rot*Math.PI/180);
-        var nw=it.s*PPMM, nh=it.s/(ph.w/ph.h)*PPMM;
-        ctx.drawImage(im,-nw/2,-nh/2,nw,nh);
+        var E=elemD(c,it.h/it.w);
+        ctx.translate(x+w/2+(c.dx/100)*w, y+h/2+(c.dy/100)*h);
+        ctx.rotate(c.rot*Math.PI/180);
+        ctx.scale(c.scale,c.scale);
+        ctx.drawImage(im,-E.w*w/2,-E.h*w/2,E.w*w,E.h*w);
         ctx.restore();
       }));
       if(mk) jobs.push(Promise.resolve().then(function(){
