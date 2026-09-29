@@ -54,6 +54,7 @@
   .headtxt{flex:1;min-width:0}
   #sidehead h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em}
   #sidehead p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+  #sidehead p.visits{font-size:11.5px;font-variant-numeric:tabular-nums}
   #sidebody{flex:1;overflow-y:auto;overscroll-behavior:contain;
             padding:12px 14px calc(18px + env(safe-area-inset-bottom,0px));
             display:flex;flex-direction:column;gap:10px}
@@ -280,6 +281,7 @@
         <div class="headtxt">
           <h1 data-i18n="appTitle">ฟอร์มจัดรูปลงกระดาษพิมพ์</h1>
           <p data-i18n="appSubtitle">จัดรูปลงกระดาษ 4×6 นิ้ว หรือ A4 แล้วบันทึกเป็น JPG / PDF</p>
+          <p class="visits" id="visits" hidden></p>
         </div>
         <button class="icon" id="closeside" data-i18n-title="hideSidebar" title="ซ่อนแถบเครื่องมือ" aria-label="ซ่อนแถบเครื่องมือ">‹</button>
       </div>
@@ -615,6 +617,7 @@
       savedPng:function(w,h){ return 'บันทึก PNG แล้ว ('+w+' × '+h+' px)' },
       savedZipPng:function(n){ return 'บันทึก ZIP แล้ว — ข้างในมี PNG '+n+' แผ่น' },
       modeAuto:'จัดอัตโนมัติ', modeFree:'วางอิสระ',
+      visits:function(n){ return '👁 เข้าชมแล้ว '+n+' ครั้ง' },
       undoTitle:'ย้อนกลับ (Ctrl+Z)', redoTitle:'ทำซ้ำ (Ctrl+Y)', undone:'ย้อนกลับแล้ว', redone:'ทำซ้ำแล้ว',
       lblPaperOri:'แนวกระดาษ', btnAddAll:'ใส่ทุกรูปลงแผ่นนี้', btnAddSheet:'+ เพิ่มแผ่น', btnDelSheet:'ลบแผ่นนี้',
       secFreeItem:'รูปบนแผ่น',
@@ -743,6 +746,7 @@
       savedPng:function(w,h){ return 'Saved PNG ('+w+' × '+h+' px)' },
       savedZipPng:function(n){ return 'Saved ZIP — contains '+n+' PNG sheet(s)' },
       modeAuto:'Auto layout', modeFree:'Free layout',
+      visits:function(n){ return '👁 '+n+' visits' },
       undoTitle:'Undo (Ctrl+Z)', redoTitle:'Redo (Ctrl+Y)', undone:'Undone', redone:'Redone',
       lblPaperOri:'Paper orientation', btnAddAll:'Add all photos to this sheet', btnAddSheet:'+ Add sheet', btnDelSheet:'Delete this sheet',
       secFreeItem:'Photo on sheet',
@@ -847,6 +851,7 @@
       if(e.hasAttribute('aria-label')) e.setAttribute('aria-label',v);
     });
     el('langToggle').textContent=LANG.toUpperCase();
+    if(typeof showVisits==='function') showVisits();
   }
   function setLang(l){
     LANG=l; try{localStorage.setItem(LANG_KEY,l)}catch(e){}
@@ -2381,6 +2386,26 @@
   });
 
   el('langToggle').addEventListener('click',function(){ setLang(LANG==='th'?'en':'th') });
+
+  // ---------- ยอดเข้าชม (บริการนับฟรี abacus.jasoncameron.dev ไม่ต้องสมัคร) ----------
+  // นับ 1 ครั้งต่อเบราว์เซอร์ต่อวัน และนับเฉพาะหน้าเว็บจริงบน github.io (เปิดไฟล์ในเครื่อง/ทดสอบ = อ่านอย่างเดียว)
+  var VISITS=null;
+  function showVisits(){
+    if(VISITS==null) return;
+    el('visits').textContent=T('visits',VISITS.toLocaleString('en-US')); el('visits').hidden=false;
+  }
+  (function(){
+    var API='https://abacus.jasoncameron.dev/', NS='arliw317-cardtool-milky', KEY='visits', MARK='cardtool-visit-day';
+    var today=new Date().toISOString().slice(0,10), counted=false;
+    try{ counted=localStorage.getItem(MARK)===today }catch(e){}
+    var op=(/\.github\.io$/.test(location.hostname) && !counted) ? 'hit' : 'get';
+    if(!window.fetch) return;
+    fetch(API+op+'/'+NS+'/'+KEY).then(function(r){ return r.ok ? r.json() : null }).then(function(d){
+      if(!d || typeof d.value!=='number') return;
+      if(op==='hit') try{ localStorage.setItem(MARK,today) }catch(e){}
+      VISITS=d.value; showVisits();
+    }).catch(function(){});                             // บริการล่ม/ถูกบล็อก = ไม่แสดง ไม่กระทบการใช้งาน
+  })();
 
   // ---------- เริ่มต้น ----------
   function boot(){
