@@ -302,6 +302,7 @@
             <button class="mini" id="fAddAll" data-i18n="btnAddAll">ใส่ทุกรูปลงแผ่นนี้</button>
             <button class="mini" id="fAddSheet" data-i18n="btnAddSheet">+ เพิ่มแผ่น</button>
             <button class="mini" id="fDelSheet" data-i18n="btnDelSheet">ลบแผ่นนี้</button>
+            <button class="mini" id="fSelAll" data-i18n="btnSelAll" data-i18n-title="selAllHint" title="หรือกด Ctrl+A">เลือกทั้งแผ่น</button>
           </div>
           <div class="grid2 auto-only">
             <label class="field"><span data-i18n="lblPhotoSize">ขนาดรูป</span>
@@ -382,7 +383,7 @@
                 <button class="mini" id="fRotR" data-i18n="btnRotR">↻ ขวา</button>
               </div>
               <div class="row">
-                <button class="mini" id="fPan" data-i18n="btnPan" data-i18n-title="panHint" title="หรือกด Ctrl ค้างแล้วลาก">เลื่อนรูปในกรอบ</button>
+                <button class="mini" id="fPan" data-i18n="btnPan" data-i18n-title="panHint" title="หรือกด Shift ค้างแล้วลาก">เลื่อนรูปในกรอบ</button>
                 <button class="mini" id="fDup" data-i18n="btnDup">ทำสำเนา</button>
                 <button class="mini" id="fDel" data-i18n="btnDelItem">เอาออกจากแผ่น</button>
               </div>
@@ -555,8 +556,11 @@
       modeAuto:'จัดอัตโนมัติ', modeFree:'วางอิสระ',
       lblPaperOri:'แนวกระดาษ', btnAddAll:'ใส่ทุกรูปลงแผ่นนี้', btnAddSheet:'+ เพิ่มแผ่น', btnDelSheet:'ลบแผ่นนี้',
       secFreeItem:'รูปบนแผ่น',
-      freeHint:'คลิกรูปในแถบ “รูปภาพ” หรือลากรูป/ไฟล์มาวางบนแผ่นได้เลย · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
-      lblRotFrame:'หมุนกรอบ', btnPan:'เลื่อนรูปในกรอบ', panHint:'หรือกด Ctrl ค้างแล้วลาก',
+      freeHint:'คลิกรูปในแถบ “รูปภาพ” หรือลากรูป/ไฟล์มาวางบนแผ่นได้เลย · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+คลิก = เลือกหลายรูป (Ctrl+A ทั้งแผ่น) · Shift+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
+      lblRotFrame:'หมุนกรอบ', btnPan:'เลื่อนรูปในกรอบ', panHint:'หรือกด Shift ค้างแล้วลาก',
+      btnSelAll:'เลือกทั้งแผ่น', selAllHint:'หรือกด Ctrl+A',
+      multiLabel:function(n){ return 'เลือก '+n+' รูป — ปรับพร้อมกัน' },
+      groupScale:function(p){ return 'ย่อ/ขยายทั้งกลุ่ม '+p+'%' },
       freeSheetHint:'ลากรูปมาวางตรงนี้ หรือคลิกรูปในแถบซ้าย',
       lblWmm:'กว้าง (มม.)', lblHmm:'สูง (มม.)', lblXmm:'ซ้าย X (มม.)', lblYmm:'บน Y (มม.)',
       lblPreset:'ตั้งขนาดกรอบ', optPresetPick:'เลือกขนาด…', optPresetPage:'เต็มพื้นที่พิมพ์ของแผ่น',
@@ -666,8 +670,11 @@
       modeAuto:'Auto layout', modeFree:'Free layout',
       lblPaperOri:'Paper orientation', btnAddAll:'Add all photos to this sheet', btnAddSheet:'+ Add sheet', btnDelSheet:'Delete this sheet',
       secFreeItem:'Photo on sheet',
-      freeHint:'Click a photo in “Photos”, or drag a photo or file straight onto a sheet · drag = move frame · bottom-right corner = resize · Ctrl+drag = pan photo inside the frame · hold Alt = no snapping',
-      lblRotFrame:'Rotate frame', btnPan:'Pan photo in frame', panHint:'Or hold Ctrl and drag',
+      freeHint:'Click a photo in “Photos”, or drag a photo or file straight onto a sheet · drag = move frame · bottom-right corner = resize · Ctrl+click = select several (Ctrl+A = whole sheet) · Shift+drag = pan photo inside the frame · hold Alt = no snapping',
+      lblRotFrame:'Rotate frame', btnPan:'Pan photo in frame', panHint:'Or hold Shift and drag',
+      btnSelAll:'Select whole sheet', selAllHint:'Or press Ctrl+A',
+      multiLabel:function(n){ return n+' selected — edited together' },
+      groupScale:function(p){ return 'Scaling group '+p+'%' },
       freeSheetHint:'Drag photos here, or click a photo in the sidebar',
       lblWmm:'Width (mm)', lblHmm:'Height (mm)', lblXmm:'Left X (mm)', lblYmm:'Top Y (mm)',
       lblPreset:'Set frame size', optPresetPick:'Choose a size…', optPresetPage:'Whole printable area',
@@ -1057,7 +1064,8 @@
   function removePhoto(i){
     var pid=photos[i].id;                                 // เอารูปนี้ออกจากทุกแผ่นในโหมดวางอิสระด้วย
     FREE.sheets.forEach(function(sh){ sh.items=sh.items.filter(function(it){ return it.pid!==pid }) });
-    if(fsel && fsel.pid===pid) fsel=null;
+    fsels=fsels.filter(function(it){ return it.pid!==pid });
+    if(fsel && fsel.pid===pid) fsel=fsels[0]||null;
     photos.splice(i,1);
     if(sel>=photos.length) sel=photos.length-1;
     buildSheets(); renderStrip(); syncEditor();
@@ -1085,9 +1093,12 @@
   }
   function edit(fn){
     var tg=edTarget(); if(!tg) return;
+    if(MODE==='free'){                                   // ปรับทุกชิ้นที่เลือกพร้อมกัน
+      selList().forEach(function(it){ var hr=it.h/it.w; fn(it.c,hr); clamp(it.c,hr) });
+      renderFreeSel(); syncEditor(); return;
+    }
     fn(tg.p,tg.hr); clamp(tg.p,tg.hr);
-    if(MODE==='free') renderFreeSel(); else renderAllCards();
-    syncEditor();
+    renderAllCards(); syncEditor();
   }
 
   // onDone(รูปที่เพิ่มใหม่) — ใช้ตอนลากไฟล์มาวางบนแผ่นในโหมดวางอิสระ
@@ -1131,7 +1142,7 @@
     el('per').value=perValue();
   });
   el('clear').addEventListener('click',function(){
-    photos=[]; sel=-1; cur=0; FREE.sheets=[{items:[]}]; fsel=null;
+    photos=[]; sel=-1; cur=0; FREE.sheets=[{items:[]}]; setSel(null);
     buildSheets(); renderStrip(); syncEditor(); say('') });
   el('prev').addEventListener('click',function(){ if(cur>0){cur--;showSheet();scrollToCurrent()} });
   el('next').addEventListener('click',function(){ if(cur<nSheets()-1){cur++;showSheet();scrollToCurrent()} });
@@ -1173,6 +1184,15 @@
   //   c = ค่าครอปของรูปในกรอบ {w,h (พิกเซลรูปจริง), rot, scale, dx, dy} แบบเดียวกับโหมดอัตโนมัติ แยกแต่ละชิ้น
   // ======================================================================
   var MODE='auto', PID=0, fsel=null, SNAP=1.5, fpan=false;
+  // เลือกหลายรูป: fsels = ทุกชิ้นที่เลือก (อยู่แผ่นเดียวกัน), fsel = ชิ้นหลัก (คลิกล่าสุด ใช้แสดงค่าในช่องแก้ไข)
+  var fsels=[];
+  function setSel(it){ fsel=it||null; fsels=it?[it]:[] }
+  function selList(){ return fsel ? (fsels.indexOf(fsel)>=0 ? fsels : [fsel]) : [] }
+  function toggleSel(it){
+    var i=fsels.indexOf(it);
+    if(i>=0){ fsels.splice(i,1); if(fsel===it) fsel=fsels[fsels.length-1]||null }
+    else { fsels.push(it); fsel=it }
+  }
   var FREE={paper:'p46', land:true, sheets:[{items:[]}]};
 
   function curPaper(){
@@ -1233,7 +1253,7 @@
   function addItem(i){
     var sh=FREE.sheets[cur], it=newItem(photos[i].id);
     if(!placeOn(sh.items,it)) say(T('noRoom'));
-    sh.items.push(it); fsel=it;
+    sh.items.push(it); setSel(it);
     buildFree(); renderStrip(); syncEditor();
   }
   // ---------- ลากรูปมาวางบนแผ่น ----------
@@ -1254,7 +1274,7 @@
     var it=newItem(pid);
     it.x=at.x-it.w/2+(k||0)*5; it.y=at.y-it.h/2+(k||0)*5;
     clampItem(it);
-    FREE.sheets[at.s].items.push(it); fsel=it; cur=at.s;
+    FREE.sheets[at.s].items.push(it); setSel(it); cur=at.s;
   }
   // ลาก thumbnail จากแถบรูปภาพ (pointer events → ใช้ได้ทั้งเมาส์และนิ้ว)
   function attachThumbDrag(t,i){
@@ -1318,10 +1338,10 @@
       im.style.transform='translate('+(c.dx/100*FW)+'px,'+(c.dy/100*FH)+'px) '+
                          'rotate('+c.rot+'deg) scale('+c.scale+') translate(-50%,-50%)';
     }
-    cd.classList.toggle('pick',it===fsel);
+    cd.classList.toggle('pick',selList().indexOf(it)>=0);
   }
-  function renderFreeSel(){ cardEls.forEach(function(cd){ if(cd._it===fsel) renderItem(cd) }) }
-  function markPick(){ cardEls.forEach(function(cd){ cd.classList.toggle('pick',cd._it===fsel) }) }
+  function renderFreeSel(){ var L=selList(); cardEls.forEach(function(cd){ if(L.indexOf(cd._it)>=0) renderItem(cd) }) }
+  function markPick(){ var L=selList(); cardEls.forEach(function(cd){ cd.classList.toggle('pick',L.indexOf(cd._it)>=0) }) }
 
   function buildFree(){
     var pp=curPaper();
@@ -1347,7 +1367,7 @@
       // คลิกพื้นที่ว่างของแผ่น = เลือกแผ่นนี้ และยกเลิกการเลือกรูป
       sh.addEventListener('pointerdown',function(e){
         if(e.target!==sh) return;
-        cur=s; fsel=null; markPick(); showSheet(); syncEditor(); renderStrip();
+        cur=s; setSel(null); markPick(); showSheet(); syncEditor(); renderStrip();
       });
       stack.appendChild(sh); sheetEls.push(sh);
     });
@@ -1359,14 +1379,24 @@
   }
 
   function attachFree(cd,s){
-    var on=false, mode='', sx=0, sy=0, x0=0, y0=0, f0=null, odx=0, ody=0, rw=1, rh=1;
+    var on=false, mode='', sx=0, sy=0, x0=0, y0=0, f0=null, odx=0, ody=0, rw=1, rh=1, grp=[], moved=false;
     cd.addEventListener('pointerdown',function(e){
       var it=cd._it;
-      fsel=it; cur=s; markPick(); showSheet(); syncEditor(); renderStrip();
-      // มุมขวาล่าง = ปรับขนาดกรอบ · Ctrl+ลาก หรือเปิดปุ่ม “เลื่อนรูปในกรอบ” = เลื่อนรูปข้างใน · ลากปกติ = ย้ายกรอบ
-      mode=e.target.classList.contains('fh') ? 'resize' : (e.ctrlKey||fpan) ? 'pan' : 'move';
-      on=true; cd.setPointerCapture(e.pointerId);
+      if(cur!==s) setSel(null);                           // กลุ่มที่เลือกต้องอยู่แผ่นเดียวกัน
+      cur=s;
+      // Ctrl+คลิก = เลือกเพิ่ม/เอาออกจากกลุ่ม (ไม่ลาก)
+      if(e.ctrlKey||e.metaKey){
+        if(!fsel) setSel(it); else toggleSel(it);
+        markPick(); showSheet(); syncEditor(); renderStrip();
+        e.preventDefault(); e.stopPropagation(); return;
+      }
+      if(selList().indexOf(it)<0) setSel(it); else fsel=it;   // คลิกชิ้นในกลุ่ม = ลากทั้งกลุ่ม
+      markPick(); showSheet(); syncEditor(); renderStrip();
+      // มุมขวาล่าง = ปรับขนาด · Shift+ลาก หรือปุ่ม “เลื่อนรูปในกรอบ” = เลื่อนรูปข้างใน · ลากปกติ = ย้าย
+      mode=e.target.classList.contains('fh') ? 'resize' : (e.shiftKey||fpan) ? 'pan' : 'move';
+      on=true; moved=false; try{ cd.setPointerCapture(e.pointerId) }catch(err){}
       sx=e.clientX; sy=e.clientY; x0=it.x; y0=it.y; f0=fp(it); odx=it.c.dx; ody=it.c.dy;
+      grp=selList().map(function(o){ return {it:o,x:o.x,y:o.y,w:o.w,h:o.h} });
       var r=cd.getBoundingClientRect(); rw=r.width; rh=r.height;
       e.preventDefault(); e.stopPropagation();
     });
@@ -1374,26 +1404,41 @@
       if(!on) return;
       var it=cd._it, pp=curPaper(), k=1/(PXMM*zoomVal);   // px บนจอ → มม. บนกระดาษ
       var dx=(e.clientX-sx)*k, dy=(e.clientY-sy)*k;
+      if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>2) moved=true;
       if(mode==='pan'){
         it.c.dx=odx+(e.clientX-sx)/rw*100; it.c.dy=ody+(e.clientY-sy)/rh*100;
         clamp(it.c,it.h/it.w); renderItem(cd);
         return;
       }
       if(mode==='move'){
+        // ดูดติดตามชิ้นที่จับ แล้วขยับทั้งกลุ่มเท่ากัน ไม่ให้ชิ้นไหนหลุดกระดาษ
         var nx=x0+dx, ny=y0+dy;
         if(!e.altKey){ var sp=snapPos(it,nx,ny,f0); nx=sp.x; ny=sp.y }
-        it.x=nx; it.y=ny;
+        var mx=nx-x0, my=ny-y0;
+        grp.forEach(function(g){
+          mx=Math.max(-g.x,Math.min(pp.w-g.w-g.x,mx));
+          my=Math.max(-g.y,Math.min(pp.h-g.h-g.y,my));
+        });
+        grp.forEach(function(g){ g.it.x=g.x+mx; g.it.y=g.y+my });
       } else {
-        var fa=f0.w/f0.h;                                  // คงทรงกรอบ: ใช้แกนที่ลากมากกว่า
-        var w=Math.max(f0.w+dx,(f0.h+dy)*fa,5);
-        w=Math.min(w,pp.w-it.x,(pp.h-it.y)*fa);
-        it.w=w; it.h=w/fa;
-        say(T('itemSize',r1(it.w),r1(it.h)));
+        // ย่อ/ขยายทั้งกลุ่มด้วย % เดียวกัน แต่ละชิ้นคงทรงและยึดมุมซ้ายบนของตัวเอง
+        var fa=f0.w/f0.h;                                  // ใช้แกนที่ลากมากกว่า
+        var kk=Math.max(f0.w+dx,(f0.h+dy)*fa)/f0.w;
+        grp.forEach(function(g){
+          kk=Math.max(kk,5/Math.min(g.w,g.h));
+          kk=Math.min(kk,(pp.w-g.x)/g.w,(pp.h-g.y)/g.h);
+        });
+        grp.forEach(function(g){ g.it.w=g.w*kk; g.it.h=g.h*kk });
+        say(grp.length>1 ? T('groupScale',Math.round(kk*100)) : T('itemSize',r1(it.w),r1(it.h)));
       }
-      clampItem(it); renderItem(cd); syncFree();
+      grp.forEach(function(g){ clampItem(g.it) });
+      cardEls.forEach(function(c){ if(selList().indexOf(c._it)>=0) renderItem(c) });
+      syncFree();
     });
     function end(e){ if(!on) return; on=false;
       try{cd.releasePointerCapture(e.pointerId)}catch(err){}
+      // คลิกเฉยๆ (ไม่ได้ลาก) บนชิ้นในกลุ่ม = เลือกเฉพาะชิ้นนั้น
+      if(!moved && mode==='move' && selList().length>1){ setSel(cd._it); markPick(); renderStrip() }
       applyToggles(); syncEditor(); }
     cd.addEventListener('pointerup',end);
     cd.addEventListener('pointercancel',end);
@@ -1404,26 +1449,37 @@
     var it=fsel;
     el('fhint').hidden=!!it; el('feditor').hidden=!it;
     if(!it){ el('fselname').textContent=''; return }
-    var p=photoById(it.pid), idx=photos.indexOf(p);
+    var p=photoById(it.pid), idx=photos.indexOf(p), L=selList();
     var nm=p ? (p.name.length>18?p.name.slice(0,16)+'…':p.name) : '';
-    el('fselname').textContent=T('itemLabel',idx+1,nm);
+    el('fselname').textContent = L.length>1 ? T('multiLabel',L.length) : T('itemLabel',idx+1,nm);
     var f=fp(it), pp=curPaper();
     [['fw',f.w],['fhgt',f.h],['fx',it.x],['fy',it.y]].forEach(function(a){
       if(document.activeElement!==el(a[0])) el(a[0]).value=r1(a[1]) });
-    el('fedge').hidden = !(it.x<MINM-0.05 || it.y<MINM-0.05 ||
-                           it.x+f.w>pp.w-MINM+0.05 || it.y+f.h>pp.h-MINM+0.05);
+    el('fedge').hidden = !L.some(function(o){
+      return o.x<MINM-0.05 || o.y<MINM-0.05 || o.x+o.w>pp.w-MINM+0.05 || o.y+o.h>pp.h-MINM+0.05 });
   }
+  // แก้ทุกชิ้นที่เลือกพร้อมกัน
   function freeEdit(fn){
-    if(!fsel) return;
-    fn(fsel); clampItem(fsel);
+    var L=selList(); if(!L.length) return;
+    L.forEach(function(it){ fn(it); clampItem(it) });
     buildFree(); renderStrip(); syncEditor();
+  }
+  // ขยับทั้งกลุ่มเท่ากัน (ช่อง X/Y และปุ่มลูกศร) — ไม่ให้ชิ้นไหนหลุดกระดาษ
+  function moveGroup(mx,my){
+    var L=selList(), pp=curPaper(); if(!L.length) return;
+    L.forEach(function(o){
+      mx=Math.max(-o.x,Math.min(pp.w-o.w-o.x,mx));
+      my=Math.max(-o.y,Math.min(pp.h-o.h-o.y,my));
+    });
+    freeEdit(function(it){ it.x+=mx; it.y+=my });
   }
   function numVal(id){ var v=parseFloat(el(id).value); return isFinite(v)?v:null }
   // พิมพ์กว้าง/สูง แยกกันได้ — กรอบเปลี่ยนทรง รูปข้างในจัดตามค่าครอป (เต็มกรอบ/เห็นทั้งรูป)
   el('fw').addEventListener('change',function(){ var v=numVal('fw'); if(v>0) freeEdit(function(it){ it.w=v }) });
   el('fhgt').addEventListener('change',function(){ var v=numVal('fhgt'); if(v>0) freeEdit(function(it){ it.h=v }) });
-  el('fx').addEventListener('change',function(){ var v=numVal('fx'); if(v!==null) freeEdit(function(it){ it.x=v }) });
-  el('fy').addEventListener('change',function(){ var v=numVal('fy'); if(v!==null) freeEdit(function(it){ it.y=v }) });
+  // X/Y = ตำแหน่งของชิ้นหลัก ชิ้นอื่นในกลุ่มขยับตามเท่ากัน
+  el('fx').addEventListener('change',function(){ var v=numVal('fx'); if(v!==null&&fsel) moveGroup(v-fsel.x,0) });
+  el('fy').addEventListener('change',function(){ var v=numVal('fy'); if(v!==null&&fsel) moveGroup(0,v-fsel.y) });
   el('fpreset').addEventListener('change',function(){
     var k=el('fpreset').value; el('fpreset').value='';
     if(!k) return;
@@ -1454,28 +1510,39 @@
   el('fPan').addEventListener('click',function(){
     fpan=!fpan; el('fPan').classList.toggle('on',fpan); document.body.classList.toggle('fpan',fpan);
   });
+  // ทำสำเนาทุกชิ้นที่เลือก — สำเนาแต่ละชิ้นหาที่ว่างเอง แล้วกลายเป็นกลุ่มที่เลือกแทน
   el('fDup').addEventListener('click',function(){
-    if(!fsel) return;
-    var sh=FREE.sheets[cur], c=copyItem(fsel);
-    c.x+=5; c.y+=5;
-    if(!placeOn(sh.items,c)) say(T('noRoom'));
-    sh.items.push(c); fsel=c;
+    var L=selList(); if(!L.length) return;
+    var sh=FREE.sheets[cur], copies=[], full=false;
+    L.forEach(function(o){
+      var c=copyItem(o); c.x+=5; c.y+=5;
+      if(!placeOn(sh.items,c)) full=true;
+      sh.items.push(c); copies.push(c);
+    });
+    if(full) say(T('noRoom'));
+    fsels=copies; fsel=copies[copies.length-1];
     buildFree(); renderStrip(); syncEditor();
   });
   function delItem(){
-    if(!fsel) return;
-    FREE.sheets.forEach(function(sh){ sh.items=sh.items.filter(function(it){ return it!==fsel }) });
-    fsel=null; buildFree(); renderStrip(); syncEditor();
+    var L=selList(); if(!L.length) return;
+    FREE.sheets.forEach(function(sh){ sh.items=sh.items.filter(function(it){ return L.indexOf(it)<0 }) });
+    setSel(null); buildFree(); renderStrip(); syncEditor();
   }
+  function selectAllSheet(){
+    var items=FREE.sheets[cur].items; if(!items.length) return;
+    fsels=items.slice(); fsel=items[items.length-1];
+    markPick(); syncEditor(); renderStrip();
+  }
+  el('fSelAll').addEventListener('click',selectAllSheet);
   el('fDel').addEventListener('click',delItem);
   el('fAddSheet').addEventListener('click',function(){
-    FREE.sheets.push({items:[]}); cur=FREE.sheets.length-1; fsel=null;
+    FREE.sheets.push({items:[]}); cur=FREE.sheets.length-1; setSel(null);
     buildFree(); renderStrip(); syncEditor(); scrollToCurrent();
   });
   el('fDelSheet').addEventListener('click',function(){
     if(FREE.sheets.length>1) FREE.sheets.splice(cur,1);
     else FREE.sheets[0].items=[];
-    fsel=null; buildFree(); renderStrip(); syncEditor();
+    setSel(null); buildFree(); renderStrip(); syncEditor();
   });
   // ใส่ทุกรูป: วางต่อกันในที่ว่าง ถ้าแผ่นเต็มเปิดแผ่นใหม่ให้เอง
   el('fAddAll').addEventListener('click',function(){
@@ -1486,7 +1553,7 @@
         FREE.sheets.push({items:[]}); cur=FREE.sheets.length-1;
         placeOn(FREE.sheets[cur].items,it);
       }
-      FREE.sheets[cur].items.push(it); fsel=it;
+      FREE.sheets[cur].items.push(it); setSel(it);
     });
     buildFree(); renderStrip(); syncEditor();
   });
@@ -1498,11 +1565,14 @@
   });
   // ลูกศร = เลื่อน 0.5 มม. (Shift = 5 มม.), Delete = เอาออก
   function freeKey(e){
-    if(MODE!=='free'||!fsel) return;
+    if(MODE!=='free') return;
     var tg=e.target&&e.target.tagName;
     if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA') return;
+    // Ctrl+A = เลือกทุกรูปบนแผ่นนี้
+    if((e.ctrlKey||e.metaKey)&&(e.key==='a'||e.key==='A')){ e.preventDefault(); selectAllSheet(); return }
+    if(!fsel) return;
     var st=e.shiftKey?5:0.5, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
-    if(mv){ e.preventDefault(); freeEdit(function(it){ it.x+=mv[0]; it.y+=mv[1] }); return }
+    if(mv){ e.preventDefault(); moveGroup(mv[0],mv[1]); return }
     if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); delItem() }
   }
   function setMode(m){
