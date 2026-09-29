@@ -209,6 +209,13 @@
       justify-content:center;text-align:center;padding:10mm;color:#9AA3AE;font-size:5mm;pointer-events:none}
   .mmrow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+
+  /* ---------- พื้นหลังโปร่งใส: บนจอแสดงเป็นลายหมากรุก (พิมพ์จริงยังเป็นพื้นขาว) ---------- */
+  body.transp .sheet, body.transp .card.empty{
+    background-color:#fff;
+    background-image:conic-gradient(#DADDE2 25%,#fff 0 50%,#DADDE2 0 75%,#fff 0);
+    background-size:4mm 4mm}
+  body.transp .card{background:transparent}
   [hidden]{display:none !important}                    /* ให้ hidden ชนะ display ของ class เสมอ */
 
   /* ---------- หน้าต่างเตือนก่อนพิมพ์ ---------- */
@@ -256,6 +263,7 @@
     .card.pick{outline:none}
     .fh{display:none !important}
     .sheet.blank{display:none !important}
+    body.transp .sheet, body.transp .card{background:#fff !important}
     .sheet.emptyfree::before{display:none}
   }
 </style>
@@ -360,7 +368,9 @@
             <label class="chk"><input type="checkbox" id="corners" checked> <span data-i18n="chkCorners">มุมกระดาษ</span></label>
             <label class="chk"><input type="checkbox" id="round"> <span data-i18n="chkRound">มุมมน</span></label>
             <label class="chk auto-only"><input type="checkbox" id="tight"> <span data-i18n="chkTight">ขอบแคบ 2 มม.</span></label>
+            <label class="chk"><input type="checkbox" id="transp"> <span data-i18n="chkTransp">พื้นหลังโปร่งใส</span></label>
           </div>
+          <div class="info" id="transpNote" hidden data-i18n="transpNote">พื้นใสมีผลเฉพาะไฟล์ PNG — JPG / PDF / พิมพ์ ยังเป็นพื้นขาว</div>
         </div>
       </details>
 
@@ -405,8 +415,14 @@
               </label>
               <div class="row">
                 <label class="lbl" data-i18n="lblRotFrame">หมุนกรอบ</label>
-                <button class="mini" id="fRotL" data-i18n="btnRotL">↺ ซ้าย</button>
-                <button class="mini" id="fRotR" data-i18n="btnRotR">↻ ขวา</button>
+                <button class="mini" id="fRotL" data-i18n="btnRot90L">↺ 90°</button>
+                <button class="mini" id="fRotR" data-i18n="btnRot90R">↻ 90°</button>
+                <button class="mini" id="fRotReset" data-i18n="btnRotReset">รีเซ็ต</button>
+              </div>
+              <div class="row">
+                <label class="lbl" for="fang" data-i18n="lblAngle">องศา</label>
+                <input type="range" id="fang" min="0" max="359" step="1" value="0" data-i18n-title="angleHint" title="ดับเบิลคลิกเพื่อตั้งตรง">
+                <span class="val" id="fangv">0°</span>
               </div>
               <div class="row">
                 <button class="mini" id="fPan" data-i18n="btnPan" data-i18n-title="panHint" title="หรือกด Shift ค้างแล้วลาก">เลื่อนรูปในกรอบ</button>
@@ -460,6 +476,10 @@
           <div class="actions">
             <button class="go" id="saveJpgAll" data-i18n="btnJpgAll">JPG ทุกแผ่น</button>
             <button class="go" id="savePdf" data-i18n="btnPdfAll">PDF รวมทุกแผ่น</button>
+          </div>
+          <div class="actions">
+            <button class="go" id="savePngAll" data-i18n="btnPngAll">PNG ทุกแผ่น</button>
+            <button class="ghost" id="savePngOne" data-i18n="btnPngOne">PNG เฉพาะแผ่นนี้</button>
           </div>
           <div class="actions">
             <button class="ghost" id="saveJpgOne" data-i18n="btnJpgOne">JPG เฉพาะแผ่นนี้</button>
@@ -589,12 +609,17 @@
       optDpi300:'300 dpi — มาตรฐานงานพิมพ์', optDpi600:'600 dpi — สูงสุด ไฟล์ใหญ่',
       btnJpgAll:'JPG ทุกแผ่น', btnPdfAll:'PDF รวมทุกแผ่น',
       btnJpgOne:'JPG เฉพาะแผ่นนี้', btnPrintDirect:'พิมพ์ปกติ',
+      btnPngAll:'PNG ทุกแผ่น', btnPngOne:'PNG เฉพาะแผ่นนี้',
+      chkTransp:'พื้นหลังโปร่งใส', transpNote:'พื้นใสมีผลเฉพาะไฟล์ PNG — JPG / PDF / พิมพ์ ยังเป็นพื้นขาว',
+      savedSheetPng:function(n){ return 'บันทึก PNG แผ่นที่ '+n+' แล้ว' },
+      savedPng:function(w,h){ return 'บันทึก PNG แล้ว ('+w+' × '+h+' px)' },
+      savedZipPng:function(n){ return 'บันทึก ZIP แล้ว — ข้างในมี PNG '+n+' แผ่น' },
       modeAuto:'จัดอัตโนมัติ', modeFree:'วางอิสระ',
       undoTitle:'ย้อนกลับ (Ctrl+Z)', redoTitle:'ทำซ้ำ (Ctrl+Y)', undone:'ย้อนกลับแล้ว', redone:'ทำซ้ำแล้ว',
       lblPaperOri:'แนวกระดาษ', btnAddAll:'ใส่ทุกรูปลงแผ่นนี้', btnAddSheet:'+ เพิ่มแผ่น', btnDelSheet:'ลบแผ่นนี้',
       secFreeItem:'รูปบนแผ่น',
       freeHint:'คลิกรูปในแถบ “รูปภาพ” หรือลากรูป/ไฟล์มาวางบนแผ่นได้เลย · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+คลิก = เลือกหลายรูป (Ctrl+A ทั้งแผ่น) · Shift+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
-      lblRotFrame:'หมุนกรอบ', btnPan:'เลื่อนรูปในกรอบ', panHint:'หรือกด Shift ค้างแล้วลาก',
+      lblRotFrame:'หมุนกรอบ', btnRot90L:'↺ 90°', btnRot90R:'↻ 90°', btnRotReset:'รีเซ็ต', btnPan:'เลื่อนรูปในกรอบ', panHint:'หรือกด Shift ค้างแล้วลาก',
       btnSelAll:'เลือกทั้งแผ่น', selAllHint:'หรือกด Ctrl+A',
       multiLabel:function(n){ return 'เลือก '+n+' รูป — ปรับพร้อมกัน' },
       groupScale:function(p){ return 'ย่อ/ขยายทั้งกลุ่ม '+p+'%' },
@@ -712,12 +737,17 @@
       optDpi300:'300 dpi — print standard', optDpi600:'600 dpi — max quality, large file',
       btnJpgAll:'JPG (all sheets)', btnPdfAll:'PDF (all sheets)',
       btnJpgOne:'JPG (this sheet only)', btnPrintDirect:'Quick print',
+      btnPngAll:'PNG (all sheets)', btnPngOne:'PNG (this sheet only)',
+      chkTransp:'Transparent background', transpNote:'Transparency applies to PNG files only — JPG / PDF / printing stay white',
+      savedSheetPng:function(n){ return 'Saved PNG sheet '+n },
+      savedPng:function(w,h){ return 'Saved PNG ('+w+' × '+h+' px)' },
+      savedZipPng:function(n){ return 'Saved ZIP — contains '+n+' PNG sheet(s)' },
       modeAuto:'Auto layout', modeFree:'Free layout',
       undoTitle:'Undo (Ctrl+Z)', redoTitle:'Redo (Ctrl+Y)', undone:'Undone', redone:'Redone',
       lblPaperOri:'Paper orientation', btnAddAll:'Add all photos to this sheet', btnAddSheet:'+ Add sheet', btnDelSheet:'Delete this sheet',
       secFreeItem:'Photo on sheet',
       freeHint:'Click a photo in “Photos”, or drag a photo or file straight onto a sheet · drag = move frame · bottom-right corner = resize · Ctrl+click = select several (Ctrl+A = whole sheet) · Shift+drag = pan photo inside the frame · hold Alt = no snapping',
-      lblRotFrame:'Rotate frame', btnPan:'Pan photo in frame', panHint:'Or hold Shift and drag',
+      lblRotFrame:'Rotate frame', btnRot90L:'↺ 90°', btnRot90R:'↻ 90°', btnRotReset:'Reset', btnPan:'Pan photo in frame', panHint:'Or hold Shift and drag',
       btnSelAll:'Select whole sheet', selAllHint:'Or press Ctrl+A',
       multiLabel:function(n){ return n+' selected — edited together' },
       groupScale:function(p){ return 'Scaling group '+p+'%' },
@@ -1176,6 +1206,8 @@
       sh.classList.toggle('marks',mk);
       sh.classList.toggle('corners',cn && !(free && freeCornersHit(i))) });
     cardEls.forEach(function(cd){ cd.classList.toggle('round',rd) });
+    var tp=el('transp').checked;                          // พื้นหลังโปร่งใส: ลายหมากรุกบนจอ + ข้อความเตือน
+    document.body.classList.toggle('transp',tp); el('transpNote').hidden=!tp;
   }
   function showSheet(){
     sheetEls.forEach(function(sh,i){ sh.classList.toggle('focus',i===cur) });
@@ -1357,7 +1389,7 @@
     buildSheets(); renderStrip(); syncEditor(); say('') });
   el('prev').addEventListener('click',function(){ if(cur>0){cur--;showSheet();scrollToCurrent()} });
   el('next').addEventListener('click',function(){ if(cur<nSheets()-1){cur++;showSheet();scrollToCurrent()} });
-  ['marks','corners','round'].forEach(function(id){ el(id).addEventListener('change',applyToggles) });
+  ['marks','corners','round','transp'].forEach(function(id){ el(id).addEventListener('change',applyToggles) });
   el('z').addEventListener('input',function(){
     edit(function(p){p.scale=parseInt(el('z').value,10)/100},'zoom') });
   el('rt').addEventListener('input',function(){
@@ -1422,7 +1454,7 @@
     return JSON.stringify({
       ph:photos.map(function(p){ return {id:p.id,rot:p.rot,scale:p.scale,dx:p.dx,dy:p.dy,cropBy:p.cropBy||null} }),
       fs:FREE.sheets.map(function(sh){ return sh.items.map(function(it){
-        return {pid:it.pid,x:it.x,y:it.y,w:it.w,h:it.h,c:it.c} }) }),
+        return {pid:it.pid,x:it.x,y:it.y,w:it.w,h:it.h,ang:it.ang||0,c:it.c} }) }),
       cur:cur, sel:selIdx
     });
   }
@@ -1474,16 +1506,28 @@
     return null;
   }
   function fp(it){ return {w:it.w,h:it.h} }
+  // กรอบหมุนได้อิสระ (it.ang องศา รอบจุดกึ่งกลาง) — x,y,w,h ยังเป็นกรอบก่อนหมุน
+  // bbox = กล่องตั้งตรงที่ครอบกรอบที่หมุนแล้ว ใช้กันหลุดกระดาษ เว้นระยะ และดูดติด
+  function bbox(it){
+    var t=(it.ang||0)*Math.PI/180, c=Math.abs(Math.cos(t)), s=Math.abs(Math.sin(t));
+    if(c<1e-9) c=0; if(s<1e-9) s=0;
+    var bw=it.w*c+it.h*s, bh=it.w*s+it.h*c;
+    return {x:it.x+(it.w-bw)/2, y:it.y+(it.h-bh)/2, w:bw, h:bh};
+  }
   function fitBox(it,bw,bh){ var k=Math.min(bw/it.w,bh/it.h); it.w*=k; it.h*=k }   // ย่อ/ขยายคงทรง
   function clampItem(it){
     var pp=curPaper();
     it.w=Math.max(5,it.w); it.h=Math.max(5,it.h);
-    if(it.w>pp.w+1e-6||it.h>pp.h+1e-6) fitBox(it,pp.w,pp.h);
-    it.x=Math.max(0,Math.min(pp.w-it.w,it.x));
-    it.y=Math.max(0,Math.min(pp.h-it.h,it.y));
+    var b=bbox(it);
+    if(b.w>pp.w+1e-6||b.h>pp.h+1e-6){                     // ใหญ่เกินกระดาษ (นับที่หมุนแล้ว) → ย่อคงทรงรอบจุดกลาง
+      var k=Math.min(pp.w/b.w,pp.h/b.h), cx=it.x+it.w/2, cy=it.y+it.h/2;
+      it.w*=k; it.h*=k; it.x=cx-it.w/2; it.y=cy-it.h/2; b=bbox(it);
+    }
+    it.x+=Math.max(0,Math.min(pp.w-b.w,b.x))-b.x;
+    it.y+=Math.max(0,Math.min(pp.h-b.h,b.y))-b.y;
     clamp(it.c,it.h/it.w);                              // กรอบเปลี่ยนทรง → ตรวจระยะเลื่อนรูปในกรอบใหม่
   }
-  function itemRect(it){ var f=fp(it); return {x:it.x,y:it.y,w:f.w,h:f.h} }
+  function itemRect(it){ return bbox(it) }
   function freeCornersHit(s){
     var sh=FREE.sheets[s]; if(!sh) return false;
     return cornersHit(curPaper(), sh.items.map(itemRect));
@@ -1511,12 +1555,12 @@
     return it;
   }
   function copyItem(it){
-    return {pid:it.pid,x:it.x,y:it.y,w:it.w,h:it.h,
+    return {pid:it.pid,x:it.x,y:it.y,w:it.w,h:it.h,ang:it.ang||0,
             c:{w:it.c.w,h:it.c.h,rot:it.c.rot,scale:it.c.scale,dx:it.c.dx,dy:it.c.dy}};
   }
   function placeOn(items,it){                            // true = เจอที่ว่าง
-    var sp=findSpot(items,fp(it),it);
-    if(sp){ it.x=sp.x; it.y=sp.y; return true }
+    var b=bbox(it), sp=findSpot(items,{w:b.w,h:b.h},it);
+    if(sp){ it.x+=sp.x-b.x; it.y+=sp.y-b.y; return true }
     return false;
   }
   function addItem(i){
@@ -1582,6 +1626,7 @@
   }
 
   // ดูดติดขอบกระดาษ / ขอบพื้นที่พิมพ์ / กึ่งกลาง / ขอบรูปอื่น (ชิดกัน หรือเว้น GAP)
+  // nx,ny,f = ตำแหน่งและขนาดของ bbox (กล่องที่ครอบกรอบที่หมุนแล้ว)
   function snapPos(it,nx,ny,f){
     var pp=curPaper(), xs=[0,MINM,pp.w-MINM-f.w,pp.w-f.w,(pp.w-f.w)/2],
         ys=[0,MINM,pp.h-MINM-f.h,pp.h-f.h,(pp.h-f.h)/2];
@@ -1602,6 +1647,8 @@
     var it=cd._it, p=photoById(it.pid), c=it.c, im=cd.querySelector('img');
     cd.style.left=it.x+'mm'; cd.style.top=it.y+'mm';
     cd.style.width=it.w+'mm'; cd.style.height=it.h+'mm';
+    cd.style.transformOrigin='50% 50%';                  // หมุนกรอบรอบจุดกึ่งกลาง
+    cd.style.transform=it.ang ? 'rotate('+it.ang+'deg)' : '';
     if(p){
       if(im.getAttribute('src')!==p.src) im.src=p.src;
       var FW=it.w*PXMM, FH=it.h*PXMM, E=elemD(c,it.h/it.w);
@@ -1668,8 +1715,8 @@
       checkpoint();                                      // ถ้าแค่คลิกไม่ได้ลาก จุดนี้จะถูกข้ามตอนกด Undo
       on=true; moved=false; try{ cd.setPointerCapture(e.pointerId) }catch(err){}
       sx=e.clientX; sy=e.clientY; x0=it.x; y0=it.y; f0=fp(it); odx=it.c.dx; ody=it.c.dy;
-      grp=selList().map(function(o){ return {it:o,x:o.x,y:o.y,w:o.w,h:o.h} });
-      var r=cd.getBoundingClientRect(); rw=r.width; rh=r.height;
+      grp=selList().map(function(o){ return {it:o,x:o.x,y:o.y,w:o.w,h:o.h,b:bbox(o)} });
+      rw=it.w*PXMM*zoomVal; rh=it.h*PXMM*zoomVal;         // ขนาดกรอบบนจอ (ก่อนหมุน)
       e.preventDefault(); e.stopPropagation();
     });
     cd.addEventListener('pointermove',function(e){
@@ -1677,30 +1724,38 @@
       var it=cd._it, pp=curPaper(), k=1/(PXMM*zoomVal);   // px บนจอ → มม. บนกระดาษ
       var dx=(e.clientX-sx)*k, dy=(e.clientY-sy)*k;
       if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>2) moved=true;
+      // ทิศที่ลากบนจอ → ทิศในแกนของกรอบ (กรอบหมุนอยู่ it.ang องศา)
+      var t=(it.ang||0)*Math.PI/180, ct=Math.cos(t), st=Math.sin(t);
+      function local(ax,ay){ return {x:ax*ct+ay*st, y:-ax*st+ay*ct} }
       if(mode==='pan'){
-        it.c.dx=odx+(e.clientX-sx)/rw*100; it.c.dy=ody+(e.clientY-sy)/rh*100;
+        var lp=local(e.clientX-sx,e.clientY-sy);
+        it.c.dx=odx+lp.x/rw*100; it.c.dy=ody+lp.y/rh*100;
         clamp(it.c,it.h/it.w); renderItem(cd);
         return;
       }
       if(mode==='move'){
-        // ดูดติดตามชิ้นที่จับ แล้วขยับทั้งกลุ่มเท่ากัน ไม่ให้ชิ้นไหนหลุดกระดาษ
-        var nx=x0+dx, ny=y0+dy;
-        if(!e.altKey){ var sp=snapPos(it,nx,ny,f0); nx=sp.x; ny=sp.y }
-        var mx=nx-x0, my=ny-y0;
+        // ดูดติดตามชิ้นที่จับ (ใช้กล่องที่ครอบกรอบหมุนแล้ว) แล้วขยับทั้งกลุ่มเท่ากัน ไม่ให้ชิ้นไหนหลุดกระดาษ
+        var b0=grp.filter(function(g){ return g.it===it })[0].b;
+        var nx=b0.x+dx, ny=b0.y+dy;
+        if(!e.altKey){ var sp=snapPos(it,nx,ny,{w:b0.w,h:b0.h}); nx=sp.x; ny=sp.y }
+        var mx=nx-b0.x, my=ny-b0.y;
         grp.forEach(function(g){
-          mx=Math.max(-g.x,Math.min(pp.w-g.w-g.x,mx));
-          my=Math.max(-g.y,Math.min(pp.h-g.h-g.y,my));
+          mx=Math.max(-g.b.x,Math.min(pp.w-g.b.w-g.b.x,mx));
+          my=Math.max(-g.b.y,Math.min(pp.h-g.b.h-g.b.y,my));
         });
         grp.forEach(function(g){ g.it.x=g.x+mx; g.it.y=g.y+my });
       } else {
-        // ย่อ/ขยายทั้งกลุ่มด้วย % เดียวกัน แต่ละชิ้นคงทรงและยึดมุมซ้ายบนของตัวเอง
-        var fa=f0.w/f0.h;                                  // ใช้แกนที่ลากมากกว่า
-        var kk=Math.max(f0.w+dx,(f0.h+dy)*fa)/f0.w;
+        // ย่อ/ขยายทั้งกลุ่มด้วย % เดียวกัน — กรอบตรงยึดมุมซ้ายบน, กรอบเอียงยึดจุดกึ่งกลาง
+        var ld=local(dx,dy), fa=f0.w/f0.h;                 // ใช้แกนที่ลากมากกว่า
+        var kk=Math.max(f0.w+ld.x,(f0.h+ld.y)*fa)/f0.w;
         grp.forEach(function(g){
           kk=Math.max(kk,5/Math.min(g.w,g.h));
-          kk=Math.min(kk,(pp.w-g.x)/g.w,(pp.h-g.y)/g.h);
+          if(!g.it.ang) kk=Math.min(kk,(pp.w-g.x)/g.w,(pp.h-g.y)/g.h);
         });
-        grp.forEach(function(g){ g.it.w=g.w*kk; g.it.h=g.h*kk });
+        grp.forEach(function(g){
+          g.it.w=g.w*kk; g.it.h=g.h*kk;
+          if(g.it.ang){ g.it.x=g.x+g.w/2-g.it.w/2; g.it.y=g.y+g.h/2-g.it.h/2 }
+        });
         say(grp.length>1 ? T('groupScale',Math.round(kk*100)) : T('itemSize',r1(it.w),r1(it.h)));
       }
       grp.forEach(function(g){ clampItem(g.it) });
@@ -1727,8 +1782,11 @@
     var f=fp(it), pp=curPaper();
     [['fw',f.w],['fhgt',f.h],['fx',it.x],['fy',it.y]].forEach(function(a){
       if(document.activeElement!==el(a[0])) el(a[0]).value=r1(a[1]) });
-    el('fedge').hidden = !L.some(function(o){
-      return o.x<MINM-0.05 || o.y<MINM-0.05 || o.x+o.w>pp.w-MINM+0.05 || o.y+o.h>pp.h-MINM+0.05 });
+    el('fedge').hidden = !L.some(function(o){ var b=bbox(o);
+      return b.x<MINM-0.05 || b.y<MINM-0.05 || b.x+b.w>pp.w-MINM+0.05 || b.y+b.h>pp.h-MINM+0.05 });
+    var a=it.ang||0;
+    if(document.activeElement!==el('fang')) el('fang').value=a;
+    el('fangv').textContent=a+'°';
   }
   // แก้ทุกชิ้นที่เลือกพร้อมกัน
   function freeEdit(fn,tag){
@@ -1740,9 +1798,9 @@
   // ขยับทั้งกลุ่มเท่ากัน (ช่อง X/Y และปุ่มลูกศร) — ไม่ให้ชิ้นไหนหลุดกระดาษ
   function moveGroup(mx,my,tag){
     var L=selList(), pp=curPaper(); if(!L.length) return;
-    L.forEach(function(o){
-      mx=Math.max(-o.x,Math.min(pp.w-o.w-o.x,mx));
-      my=Math.max(-o.y,Math.min(pp.h-o.h-o.y,my));
+    L.forEach(function(o){ var b=bbox(o);
+      mx=Math.max(-b.x,Math.min(pp.w-b.w-b.x,mx));
+      my=Math.max(-b.y,Math.min(pp.h-b.h-b.y,my));
     });
     freeEdit(function(it){ it.x+=mx; it.y+=my },tag);
   }
@@ -1766,20 +1824,22 @@
       it.w=land?a:b; it.h=land?b:a;
     });
   });
-  // หมุนกรอบ 90° รอบจุดกึ่งกลาง — รูปข้างในหมุนตามไปด้วย ภาพไม่เปลี่ยน
-  function rotItem(d){
-    freeEdit(function(it){
-      var cx=it.x+it.w/2, cy=it.y+it.h/2, c=it.c;
-      var ox=c.dx/100*it.w, oy=c.dy/100*it.h;             // ระยะเลื่อนรูปเป็น มม.
-      var t=it.w; it.w=it.h; it.h=t;
-      it.x=cx-it.w/2; it.y=cy-it.h/2;
-      var nx= d>0 ? -oy : oy, ny= d>0 ? ox : -ox;          // หมุนเวกเตอร์ตามกรอบ
-      c.dx=nx/it.w*100; c.dy=ny/it.h*100;
-      c.rot=normDeg(c.rot+d);
-    });
-  }
+  // หมุนกรอบ (พร้อมรูปข้างใน) รอบจุดกึ่งกลาง 0–359° — ปุ่มทีละ 90°, สไลเดอร์, รีเซ็ต
+  function normAng(a){ a=Math.round(a)%360; return a<0?a+360:a }
+  function rotItem(d){ freeEdit(function(it){ it.ang=normAng((it.ang||0)+d) }) }
   el('fRotL').addEventListener('click',function(){ rotItem(-90) });
   el('fRotR').addEventListener('click',function(){ rotItem(90) });
+  el('fRotReset').addEventListener('click',function(){ freeEdit(function(it){ it.ang=0 }) });
+  // ลากสไลเดอร์: อัปเดตเฉพาะชิ้นที่เลือก (ลื่นกว่าสร้างแผ่นใหม่ทั้งหมด) และนับเป็น Undo ครั้งเดียว
+  el('fang').addEventListener('input',function(){
+    var L=selList(); if(!L.length) return;
+    checkpoint('fang');
+    var v=normAng(parseInt(el('fang').value,10)||0);
+    L.forEach(function(it){ it.ang=v; clampItem(it) });
+    renderFreeSel(); syncFree();
+  });
+  el('fang').addEventListener('change',function(){ applyToggles() });
+  el('fang').addEventListener('dblclick',function(){ freeEdit(function(it){ it.ang=0 }) });
   el('fPan').addEventListener('click',function(){
     fpan=!fpan; el('fPan').classList.toggle('on',fpan); document.body.classList.toggle('fpan',fpan);
   });
@@ -2009,14 +2069,16 @@
   updateThemeIcon();
 
   // ---------- วาดแผ่นลง canvas ----------
-  function drawSheet(s,dpi){
+  // fmt: 'jpg' (ค่าเริ่มต้น, พื้นขาวเสมอ) หรือ 'png' (พื้นใสถ้าติ๊ก “พื้นหลังโปร่งใส”)
+  function drawSheet(s,dpi,fmt){
+    var png=fmt==='png';
     var free=MODE==='free';
     var pp=curPaper(), PPMM=dpi/25.4;
     var W=Math.round(pp.w*PPMM), H=Math.round(pp.h*PPMM);
     var cv=document.createElement('canvas'); cv.width=W; cv.height=H;
     var ctx=cv.getContext('2d');
     ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
+    if(!(png && el('transp').checked)){ ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H) }
     var round=el('round').checked, mk=el('marks').checked, cn=el('corners').checked;
     if(free){ if(freeCornersHit(s)) cn=false }
     else {
@@ -2064,18 +2126,23 @@
     // โหมดวางอิสระ: กรอบขนาดของแต่ละชิ้น รูปข้างในครอปตามค่าของชิ้นนั้น (เหมือนโหมดอัตโนมัติ)
     if(free) FREE.sheets[s].items.forEach(function(it){
       var ph=photoById(it.pid); if(!ph) return;
-      var c=it.c, x=it.x*PPMM, y=it.y*PPMM, w=it.w*PPMM, h=it.h*PPMM;
+      var c=it.c, w=it.w*PPMM, h=it.h*PPMM, x=-w/2, y=-h/2;
+      // ย้ายจุดเริ่มไปกลางกรอบแล้วหมุนตาม it.ang — วาดกรอบในพิกัดที่หมุนแล้ว (เส้นตัดเอียงตามกรอบ)
+      function place(){
+        ctx.translate((it.x+it.w/2)*PPMM,(it.y+it.h/2)*PPMM);
+        if(it.ang) ctx.rotate(it.ang*Math.PI/180);
+      }
       jobs.push(loadImage(ph.src).then(function(im){
-        ctx.save(); rrect(ctx,x,y,w,h,rad); ctx.clip();
+        ctx.save(); place(); rrect(ctx,x,y,w,h,rad); ctx.clip();
         var E=elemD(c,it.h/it.w);
-        ctx.translate(x+w/2+(c.dx/100)*w, y+h/2+(c.dy/100)*h);
+        ctx.translate((c.dx/100)*w,(c.dy/100)*h);
         ctx.rotate(c.rot*Math.PI/180);
         ctx.scale(c.scale,c.scale);
         ctx.drawImage(im,-E.w*w/2,-E.h*w/2,E.w*w,E.h*w);
         ctx.restore();
       }));
       if(mk) jobs.push(Promise.resolve().then(function(){
-        var o=0.5*PPMM; ctx.save(); ctx.strokeStyle='#B5356B';
+        var o=0.5*PPMM; ctx.save(); place(); ctx.strokeStyle='#B5356B';
         ctx.lineWidth=Math.max(1,0.2*PPMM); ctx.setLineDash([2.2*PPMM,1.6*PPMM]);
         rrect(ctx,x-o,y-o,w+2*o,h+2*o,rad?rad+o:0); ctx.stroke(); ctx.restore();
       }));
@@ -2091,12 +2158,12 @@
         ctx.moveTo(W-m-L,H-m);ctx.lineTo(W-m,H-m);ctx.lineTo(W-m,H-m-L);
         ctx.stroke(); ctx.restore();
       }
-      return new Promise(function(res){ cv.toBlob(res,'image/jpeg',JPEG_Q) })
+      return new Promise(function(res){ png ? cv.toBlob(res,'image/png') : cv.toBlob(res,'image/jpeg',JPEG_Q) })
         .then(function(b){ return b.arrayBuffer().then(function(ab){
           return {bytes:new Uint8Array(ab), w:W, h:H}; }) });
     });
   }
-  function allSheets(dpi,onStep){
+  function allSheets(dpi,onStep,fmt){
     // โหมดวางอิสระ: ข้ามแผ่นที่ยังว่าง
     var idx=[];
     for(var s=0;s<nSheets();s++) if(MODE!=='free'||FREE.sheets[s].items.length) idx.push(s);
@@ -2104,7 +2171,7 @@
     return (function step(i){
       if(i>=N) return Promise.resolve(out);
       if(onStep) onStep(i+1,N);
-      return drawSheet(idx[i],dpi).then(function(r){ out.push(r); return step(i+1) });
+      return drawSheet(idx[i],dpi,fmt).then(function(r){ out.push(r); return step(i+1) });
     })(0);
   }
 
@@ -2206,13 +2273,34 @@
     }
     return true;
   }
-  function busy(on){ ['saveJpgAll','saveJpgOne','savePdf','print','printDirect'].forEach(function(id){ el(id).disabled=on }) }
+  function busy(on){ ['saveJpgAll','saveJpgOne','savePngAll','savePngOne','savePdf','print','printDirect'].forEach(function(id){ el(id).disabled=on }) }
   function pad(n){ return (n<10?'0':'')+n }
   function dpi(){ return parseInt(el('dpi').value,10) }
   function base(){
     if(MODE==='free') return 'free-'+PAPERS[FREE.paper].tag+(FREE.land?'L':'P')+'-'+dpi()+'dpi';
     return S().tag+'-'+P().tag+'-'+dpi()+'dpi';
   }
+
+  // ---------- PNG (พื้นใสได้) ----------
+  el('savePngOne').addEventListener('click',function(){
+    if(!guard(true)) return; busy(true); say(T('creatingFile'));
+    drawSheet(cur,dpi(),'png').then(function(r){
+      return saveBlob(new Blob([r.bytes],{type:'image/png'}), base()+'-'+pad(cur+1)+'.png');
+    }).then(function(){ say(T('savedSheetPng',cur+1)) })
+      .catch(function(e){ say(e&&e.code==='declined'?T('cancelledSave'):T('saveFailed')) })
+      .then(function(){ busy(false) });
+  });
+  el('savePngAll').addEventListener('click',function(){
+    if(!guard()) return; busy(true);
+    allSheets(dpi(),function(i,n){ say(T('creatingSheet',i,n)) },'png').then(function(rs){
+      if(rs.length===1) return saveBlob(new Blob([rs[0].bytes],{type:'image/png'}), base()+'.png')
+        .then(function(){ say(T('savedPng',rs[0].w,rs[0].h)) });
+      var zip=buildZIP(rs.map(function(r,i){ return {name:base()+'-'+pad(i+1)+'.png', bytes:r.bytes} }));
+      return saveBlob(zip, base()+'-png.zip')
+        .then(function(){ say(T('savedZipPng',rs.length)) });
+    }).catch(function(e){ say(e&&e.code==='declined'?T('cancelledSave'):T('saveFailed')) })
+      .then(function(){ busy(false) });
+  });
 
   el('saveJpgOne').addEventListener('click',function(){
     if(!guard(true)) return; busy(true); say(T('creatingFile'));
