@@ -206,6 +206,19 @@
       background:var(--reg);border:calc(2px / var(--z,1)) solid #fff;border-radius:calc(4px / var(--z,1));
       cursor:nwse-resize;display:none;z-index:2;touch-action:none}
   .card.pick .fh{display:block}
+  /* โหมดครอป (ดับเบิลคลิกรูป): จุดจับขอบ 4 ด้าน — ลากขอบ = ตัด, ลากรูป = เลื่อนรูปในกรอบ */
+  .fe{position:absolute;display:none;z-index:3;touch-action:none;background:#fff;
+      border:calc(2px / var(--z,1)) solid var(--reg);border-radius:calc(3px / var(--z,1))}
+  .fe-t,.fe-b{left:50%;width:calc(34px / var(--z,1));height:calc(10px / var(--z,1));margin-left:calc(-17px / var(--z,1));cursor:ns-resize}
+  .fe-l,.fe-r{top:50%;height:calc(34px / var(--z,1));width:calc(10px / var(--z,1));margin-top:calc(-17px / var(--z,1));cursor:ew-resize}
+  .fe-t{top:0} .fe-b{bottom:0} .fe-l{left:0} .fe-r{right:0}
+  .card.cropping .fe{display:block}
+  .card.cropping .fh{display:none}
+  .card.cropping{outline:calc(2px / var(--z,1)) dashed var(--reg);outline-offset:0;cursor:grab}
+  /* ล้นกระดาษ: ชั้นล่างแสดงทั้งชิ้นแบบจาง (เห็นส่วนที่ล้น), ชั้นบนตัดตรงขอบกระดาษ */
+  .fl-under,.fl-clip{position:absolute;inset:0}
+  .fl-under{opacity:.35}
+  .fl-clip{overflow:hidden}
   .sheet.emptyfree::before{content:attr(data-hint);position:absolute;inset:0;display:flex;align-items:center;
       justify-content:center;text-align:center;padding:10mm;color:#9AA3AE;font-size:5mm;pointer-events:none}
   .mmrow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -262,7 +275,8 @@
     .sheet:last-child{page-break-after:auto;break-after:auto}
     .sheet.focus{outline:none}
     .card.pick{outline:none}
-    .fh{display:none !important}
+    .fh,.fe,.fl-under{display:none !important}
+    .card.cropping{outline:none}
     .sheet.blank{display:none !important}
     body.transp .sheet, body.transp .card{background:#fff !important}
     .sheet.emptyfree::before{display:none}
@@ -621,7 +635,8 @@
       undoTitle:'ย้อนกลับ (Ctrl+Z)', redoTitle:'ทำซ้ำ (Ctrl+Y)', undone:'ย้อนกลับแล้ว', redone:'ทำซ้ำแล้ว',
       lblPaperOri:'แนวกระดาษ', btnAddAll:'ใส่ทุกรูปลงแผ่นนี้', btnAddSheet:'+ เพิ่มแผ่น', btnDelSheet:'ลบแผ่นนี้',
       secFreeItem:'รูปบนแผ่น',
-      freeHint:'คลิกรูปในแถบ “รูปภาพ” หรือลากรูป/ไฟล์มาวางบนแผ่นได้เลย · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+คลิก = เลือกหลายรูป (Ctrl+A ทั้งแผ่น) · Shift+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
+      freeHint:'คลิกรูปในแถบ “รูปภาพ” หรือลากรูป/ไฟล์มาวางบนแผ่นได้เลย · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · ดับเบิลคลิก = ครอป · Ctrl+คลิก = เลือกหลายรูป (Ctrl+A ทั้งแผ่น) · Shift+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด · ลากล้นกระดาษได้ (ส่วนที่ล้นไม่พิมพ์)',
+      cropHint:'โหมดครอป: ลากขอบ = ตัด/เปิดขอบรูป · ลากรูป = เลื่อนรูปในกรอบ · ดับเบิลคลิก / Enter / Esc = เสร็จ',
       lblRotFrame:'หมุนกรอบ', btnRot90L:'↺ 90°', btnRot90R:'↻ 90°', btnRotReset:'รีเซ็ต', btnPan:'เลื่อนรูปในกรอบ', panHint:'หรือกด Shift ค้างแล้วลาก',
       btnSelAll:'เลือกทั้งแผ่น', selAllHint:'หรือกด Ctrl+A',
       multiLabel:function(n){ return 'เลือก '+n+' รูป — ปรับพร้อมกัน' },
@@ -750,7 +765,8 @@
       undoTitle:'Undo (Ctrl+Z)', redoTitle:'Redo (Ctrl+Y)', undone:'Undone', redone:'Redone',
       lblPaperOri:'Paper orientation', btnAddAll:'Add all photos to this sheet', btnAddSheet:'+ Add sheet', btnDelSheet:'Delete this sheet',
       secFreeItem:'Photo on sheet',
-      freeHint:'Click a photo in “Photos”, or drag a photo or file straight onto a sheet · drag = move frame · bottom-right corner = resize · Ctrl+click = select several (Ctrl+A = whole sheet) · Shift+drag = pan photo inside the frame · hold Alt = no snapping',
+      freeHint:'Click a photo in “Photos”, or drag a photo or file straight onto a sheet · drag = move frame · bottom-right corner = resize · double-click = crop · Ctrl+click = select several (Ctrl+A = whole sheet) · Shift+drag = pan photo inside the frame · hold Alt = no snapping · frames may overflow the paper (the overflow is not printed)',
+      cropHint:'Crop mode: drag an edge = trim/restore · drag the photo = pan · double-click / Enter / Esc = done',
       lblRotFrame:'Rotate frame', btnRot90L:'↺ 90°', btnRot90R:'↻ 90°', btnRotReset:'Reset', btnPan:'Pan photo in frame', panHint:'Or hold Shift and drag',
       btnSelAll:'Select whole sheet', selAllHint:'Or press Ctrl+A',
       multiLabel:function(n){ return n+' selected — edited together' },
@@ -1465,6 +1481,7 @@
   }
   function applyState(str){
     var o=JSON.parse(str), byId={};
+    fcrop=null;                                          // ชิ้นถูกสร้างใหม่หมด → ออกจากโหมดครอป
     o.ph.forEach(function(q){ byId[q.id]=q });
     photos.forEach(function(p){ var q=byId[p.id]; if(!q) return;
       p.rot=q.rot; p.scale=q.scale; p.dx=q.dx; p.dy=q.dy; if(q.cropBy) p.cropBy=q.cropBy; else delete p.cropBy });
@@ -1520,17 +1537,25 @@
     return {x:it.x+(it.w-bw)/2, y:it.y+(it.h-bh)/2, w:bw, h:bh};
   }
   function fitBox(it,bw,bh){ var k=Math.min(bw/it.w,bh/it.h); it.w*=k; it.h*=k }   // ย่อ/ขยายคงทรง
+  // กรอบล้นกระดาษได้ (ส่วนที่ล้นไม่ถูกพิมพ์) แต่ต้องเหลือบนกระดาษอย่างน้อย KEEP มม. ไม่ให้หลุดหายไปทั้งชิ้น
+  var KEEP=5;
   function clampItem(it){
     var pp=curPaper();
     it.w=Math.max(5,it.w); it.h=Math.max(5,it.h);
     var b=bbox(it);
-    if(b.w>pp.w+1e-6||b.h>pp.h+1e-6){                     // ใหญ่เกินกระดาษ (นับที่หมุนแล้ว) → ย่อคงทรงรอบจุดกลาง
-      var k=Math.min(pp.w/b.w,pp.h/b.h), cx=it.x+it.w/2, cy=it.y+it.h/2;
+    if(b.w>2*pp.w+1e-6||b.h>2*pp.h+1e-6){                 // ใหญ่เกิน 2 เท่าของกระดาษ → ย่อคงทรงรอบจุดกลาง
+      var k=Math.min(2*pp.w/b.w,2*pp.h/b.h), cx=it.x+it.w/2, cy=it.y+it.h/2;
       it.w*=k; it.h*=k; it.x=cx-it.w/2; it.y=cy-it.h/2; b=bbox(it);
     }
-    it.x+=Math.max(0,Math.min(pp.w-b.w,b.x))-b.x;
-    it.y+=Math.max(0,Math.min(pp.h-b.h,b.y))-b.y;
+    it.x+=Math.max(KEEP-b.w,Math.min(pp.w-KEEP,b.x))-b.x;
+    it.y+=Math.max(KEEP-b.h,Math.min(pp.h-KEEP,b.y))-b.y;
     clamp(it.c,it.h/it.w);                              // กรอบเปลี่ยนทรง → ตรวจระยะเลื่อนรูปในกรอบใหม่
+  }
+  // ช่วงที่ขยับทั้งกลุ่มได้ (ทุกชิ้นยังเหลือบนกระดาษอย่างน้อย KEEP มม.)
+  function limitMove(b,mx,my){
+    var pp=curPaper();
+    return {x:Math.max(KEEP-b.x-b.w,Math.min(pp.w-KEEP-b.x,mx)),
+            y:Math.max(KEEP-b.y-b.h,Math.min(pp.h-KEEP-b.y,my))};
   }
   function itemRect(it){ return bbox(it) }
   function freeCornersHit(s){
@@ -1662,9 +1687,38 @@
                          'rotate('+c.rot+'deg) scale('+c.scale+') translate(-50%,-50%)';
     }
     cd.classList.toggle('pick',selList().indexOf(it)>=0);
+    cd.classList.toggle('cropping',it===fcrop);
   }
   function renderFreeSel(){ var L=selList(); cardEls.forEach(function(cd){ if(L.indexOf(cd._it)>=0) renderItem(cd) }) }
-  function markPick(){ var L=selList(); cardEls.forEach(function(cd){ cd.classList.toggle('pick',L.indexOf(cd._it)>=0) }) }
+  function markPick(){ var L=selList(); cardEls.forEach(function(cd){
+    cd.classList.toggle('pick',L.indexOf(cd._it)>=0); cd.classList.toggle('cropping',cd._it===fcrop) }) }
+  // ทุกชิ้นมี 2 ชุดบนจอ (ชั้นจาง + ชั้นที่ตัดตรงขอบกระดาษ) — วาดใหม่ทั้งสองชุดของชิ้นนี้
+  function renderItemAll(it){ cardEls.forEach(function(cd){ if(cd._it===it) renderItem(cd) }) }
+
+  // ---------- โหมดครอป (ดับเบิลคลิกรูป) ----------
+  var fcrop=null;
+  function setCrop(it){
+    fcrop=it||null;
+    if(fcrop && selList().indexOf(fcrop)<0) setSel(fcrop);
+    markPick(); syncEditor();
+    if(fcrop) say(T('cropHint'));
+  }
+  // ลากขอบ: กรอบเปลี่ยนขนาดด้านเดียว แต่รูปอยู่ที่เดิมบนกระดาษ (คำนวณ scale/dx/dy ใหม่ให้ตำแหน่งและขนาดรูปคงที่)
+  function cropEdge(it,st,edge,d){
+    var c=it.c, W=st.w, H=st.h, nw=W, nh=H, sx=0, sy=0;
+    if(edge==='r'){ nw=Math.max(5,W+d); sx=(nw-W)/2 }
+    if(edge==='l'){ nw=Math.max(5,W-d); sx=(W-nw)/2 }
+    if(edge==='b'){ nh=Math.max(5,H+d); sy=(nh-H)/2 }
+    if(edge==='t'){ nh=Math.max(5,H-d); sy=(H-nh)/2 }
+    var E0=elemD(st.c,H/W), E1=elemD({w:c.w,h:c.h,rot:st.c.rot},nh/nw);
+    c.scale=st.c.scale*(E0.w*W)/(E1.w*nw);                // ขนาดรูปเป็น มม. เท่าเดิม
+    c.dx=(st.c.dx/100*W - sx)/nw*100;                     // ตำแหน่งรูปเทียบกับกลางกรอบใหม่
+    c.dy=(st.c.dy/100*H - sy)/nh*100;
+    var t=(it.ang||0)*Math.PI/180, ct=Math.cos(t), sn=Math.sin(t);
+    var cx=st.x+W/2+sx*ct-sy*sn, cy=st.y+H/2+sx*sn+sy*ct; // กลางกรอบใหม่ (หมุนตามกรอบ)
+    it.w=nw; it.h=nh; it.x=cx-nw/2; it.y=cy-nh/2;
+    say(T('itemSize',r1(nw),r1(nh)));
+  }
 
   function buildFree(){
     var pp=curPaper();
@@ -1679,18 +1733,26 @@
       sh.style.width=pp.w+'mm'; sh.style.height=pp.h+'mm';
       ['tl','tr','bl','br'].forEach(function(c){
         var m=document.createElement('span'); m.className='cmark '+c; sh.appendChild(m) });
+      // ชั้นล่าง: ทั้งชิ้นแบบจาง (เห็นส่วนที่ล้นกระดาษและจับลากได้) · ชั้นบน: ตัดตรงขอบกระดาษ = สิ่งที่จะพิมพ์ออกมา
+      var under=document.createElement('div'); under.className='fl-under';
+      var clip=document.createElement('div'); clip.className='fl-clip';
+      sh.appendChild(under); sh.appendChild(clip);
       shd.items.forEach(function(it){
         clampItem(it);
-        var cd=document.createElement('div'); cd.className='card fitem'; cd._it=it; cd.dataset.sheet=s;
-        var im=document.createElement('img'); im.alt=''; cd.appendChild(im);
-        var h=document.createElement('span'); h.className='fh'; cd.appendChild(h);
-        attachFree(cd,s); renderItem(cd);
-        sh.appendChild(cd); cardEls.push(cd);
+        [under,clip].forEach(function(layer){
+          var cd=document.createElement('div'); cd.className='card fitem'; cd._it=it; cd.dataset.sheet=s;
+          var im=document.createElement('img'); im.alt=''; cd.appendChild(im);
+          var h=document.createElement('span'); h.className='fh'; cd.appendChild(h);
+          ['t','b','l','r'].forEach(function(e){
+            var fe=document.createElement('span'); fe.className='fe fe-'+e; fe.dataset.e=e; cd.appendChild(fe) });
+          attachFree(cd,s); renderItem(cd);
+          layer.appendChild(cd); cardEls.push(cd);
+        });
       });
-      // คลิกพื้นที่ว่างของแผ่น = เลือกแผ่นนี้ และยกเลิกการเลือกรูป
+      // คลิกพื้นที่ว่างของแผ่น = เลือกแผ่นนี้ ยกเลิกการเลือกรูป และออกจากโหมดครอป
       sh.addEventListener('pointerdown',function(e){
-        if(e.target!==sh) return;
-        cur=s; setSel(null); markPick(); showSheet(); syncEditor(); renderStrip();
+        if(e.target!==sh && e.target!==under && e.target!==clip) return;
+        cur=s; fcrop=null; setSel(null); markPick(); showSheet(); syncEditor(); renderStrip();
       });
       stack.appendChild(sh); sheetEls.push(sh);
     });
@@ -1702,11 +1764,28 @@
   }
 
   function attachFree(cd,s){
-    var on=false, mode='', sx=0, sy=0, x0=0, y0=0, f0=null, odx=0, ody=0, rw=1, rh=1, grp=[], moved=false;
+    var on=false, mode='', sx=0, sy=0, x0=0, y0=0, f0=null, odx=0, ody=0, rw=1, rh=1, grp=[], moved=false, edge='', cst=null;
+    // ดับเบิลคลิก = เข้า/ออกโหมดครอปของชิ้นนี้
+    cd.addEventListener('dblclick',function(e){
+      e.preventDefault(); e.stopPropagation();
+      setCrop(fcrop===cd._it ? null : cd._it);
+    });
     cd.addEventListener('pointerdown',function(e){
       var it=cd._it;
       if(cur!==s) setSel(null);                           // กลุ่มที่เลือกต้องอยู่แผ่นเดียวกัน
       cur=s;
+      if(fcrop && fcrop!==it){ fcrop=null; markPick() }   // คลิกชิ้นอื่น = ออกจากโหมดครอป
+      // โหมดครอป: ลากขอบ = ตัด/เปิดขอบรูป, ลากตัวรูป = เลื่อนรูปในกรอบ
+      if(fcrop===it){
+        edge=e.target.classList.contains('fe') ? e.target.dataset.e : '';
+        mode=edge ? 'crop' : 'pan';
+        checkpoint();
+        on=true; moved=false; try{ cd.setPointerCapture(e.pointerId) }catch(err){}
+        sx=e.clientX; sy=e.clientY; odx=it.c.dx; ody=it.c.dy;
+        cst={x:it.x,y:it.y,w:it.w,h:it.h,c:{w:it.c.w,h:it.c.h,rot:it.c.rot,scale:it.c.scale,dx:it.c.dx,dy:it.c.dy}};
+        rw=it.w*PXMM*zoomVal; rh=it.h*PXMM*zoomVal; grp=[{it:it}];
+        e.preventDefault(); e.stopPropagation(); return;
+      }
       // Ctrl+คลิก = เลือกเพิ่ม/เอาออกจากกลุ่ม (ไม่ลาก)
       if(e.ctrlKey||e.metaKey){
         if(!fsel) setSel(it); else toggleSel(it);
@@ -1735,7 +1814,13 @@
       if(mode==='pan'){
         var lp=local(e.clientX-sx,e.clientY-sy);
         it.c.dx=odx+lp.x/rw*100; it.c.dy=ody+lp.y/rh*100;
-        clamp(it.c,it.h/it.w); renderItem(cd);
+        clamp(it.c,it.h/it.w); renderItemAll(it);
+        return;
+      }
+      if(mode==='crop'){
+        var lc=local(dx,dy);
+        cropEdge(it,cst,edge,(edge==='l'||edge==='r') ? lc.x : lc.y);
+        clampItem(it); renderItemAll(it); syncFree();
         return;
       }
       if(mode==='move'){
@@ -1745,8 +1830,7 @@
         if(!e.altKey){ var sp=snapPos(it,nx,ny,{w:b0.w,h:b0.h}); nx=sp.x; ny=sp.y }
         var mx=nx-b0.x, my=ny-b0.y;
         grp.forEach(function(g){
-          mx=Math.max(-g.b.x,Math.min(pp.w-g.b.w-g.b.x,mx));
-          my=Math.max(-g.b.y,Math.min(pp.h-g.b.h-g.b.y,my));
+          var lm=limitMove(g.b,mx,my); mx=lm.x; my=lm.y;
         });
         grp.forEach(function(g){ g.it.x=g.x+mx; g.it.y=g.y+my });
       } else {
@@ -1755,7 +1839,6 @@
         var kk=Math.max(f0.w+ld.x,(f0.h+ld.y)*fa)/f0.w;
         grp.forEach(function(g){
           kk=Math.max(kk,5/Math.min(g.w,g.h));
-          if(!g.it.ang) kk=Math.min(kk,(pp.w-g.x)/g.w,(pp.h-g.y)/g.h);
         });
         grp.forEach(function(g){
           g.it.w=g.w*kk; g.it.h=g.h*kk;
@@ -1804,8 +1887,7 @@
   function moveGroup(mx,my,tag){
     var L=selList(), pp=curPaper(); if(!L.length) return;
     L.forEach(function(o){ var b=bbox(o);
-      mx=Math.max(-b.x,Math.min(pp.w-b.w-b.x,mx));
-      my=Math.max(-b.y,Math.min(pp.h-b.h-b.y,my));
+      var lm=limitMove(b,mx,my); mx=lm.x; my=lm.y;
     });
     freeEdit(function(it){ it.x+=mx; it.y+=my },tag);
   }
@@ -1865,6 +1947,7 @@
   function delItem(){
     var L=selList(); if(!L.length) return;
     checkpoint();
+    if(L.indexOf(fcrop)>=0) fcrop=null;
     FREE.sheets.forEach(function(sh){ sh.items=sh.items.filter(function(it){ return L.indexOf(it)<0 }) });
     setSel(null); buildFree(); renderStrip(); syncEditor();
   }
@@ -1913,13 +1996,15 @@
     if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA') return;
     // Ctrl+A = เลือกทุกรูปบนแผ่นนี้
     if((e.ctrlKey||e.metaKey)&&(e.key==='a'||e.key==='A')){ e.preventDefault(); selectAllSheet(); return }
+    // Enter / Esc = จบโหมดครอป
+    if((e.key==='Enter'||e.key==='Escape') && fcrop){ e.preventDefault(); setCrop(null); return }
     if(!fsel) return;
     var st=e.shiftKey?5:0.5, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
     if(mv){ e.preventDefault(); moveGroup(mv[0],mv[1],'nudge'); return }
     if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); delItem() }
   }
   function setMode(m){
-    MODE=m; cur=0;
+    MODE=m; cur=0; fcrop=null;
     document.body.classList.toggle('free',m==='free');
     el('modeAuto').classList.toggle('on',m!=='free');
     el('modeFree').classList.toggle('on',m==='free');
