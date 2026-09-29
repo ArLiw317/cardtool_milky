@@ -194,6 +194,11 @@
   .card.fitem{cursor:move;touch-action:none}
   body.fpan .card.fitem{cursor:grab}
   button.mini.on{background:var(--reg-soft);color:var(--reg);border-color:var(--reg)}
+  body.free .thumb{touch-action:none}                 /* ลาก thumbnail ด้วยนิ้วได้ ไม่เลื่อนแถบแทน */
+  .dragghost{position:fixed;z-index:60;width:64px;height:64px;object-fit:cover;border-radius:6px;
+             transform:translate(-50%,-50%);opacity:.85;pointer-events:none;
+             box-shadow:0 4px 16px rgba(16,22,30,.35);border:2px solid var(--reg)}
+  .sheet.dropon{outline:3px dashed var(--reg);outline-offset:4px}
   .card.fitem img{max-width:none}
   /* จุดลากปรับขนาดมุมขวาล่าง — ขนาดชดเชยซูมพรีวิวให้กดง่ายเท่าเดิม */
   .fh{position:absolute;right:0;bottom:0;width:calc(16px / var(--z,1));height:calc(16px / var(--z,1));
@@ -550,9 +555,9 @@
       modeAuto:'จัดอัตโนมัติ', modeFree:'วางอิสระ',
       lblPaperOri:'แนวกระดาษ', btnAddAll:'ใส่ทุกรูปลงแผ่นนี้', btnAddSheet:'+ เพิ่มแผ่น', btnDelSheet:'ลบแผ่นนี้',
       secFreeItem:'รูปบนแผ่น',
-      freeHint:'คลิกรูปในแถบ “รูปภาพ” เพื่อเพิ่มลงแผ่นนี้ · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
+      freeHint:'คลิกรูปในแถบ “รูปภาพ” หรือลากรูป/ไฟล์มาวางบนแผ่นได้เลย · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
       lblRotFrame:'หมุนกรอบ', btnPan:'เลื่อนรูปในกรอบ', panHint:'หรือกด Ctrl ค้างแล้วลาก',
-      freeSheetHint:'คลิกรูปในแถบซ้ายเพื่อวางลงแผ่นนี้',
+      freeSheetHint:'ลากรูปมาวางตรงนี้ หรือคลิกรูปในแถบซ้าย',
       lblWmm:'กว้าง (มม.)', lblHmm:'สูง (มม.)', lblXmm:'ซ้าย X (มม.)', lblYmm:'บน Y (มม.)',
       lblPreset:'ตั้งขนาดกรอบ', optPresetPick:'เลือกขนาด…', optPresetPage:'เต็มพื้นที่พิมพ์ของแผ่น',
       btnDup:'ทำสำเนา', btnDelItem:'เอาออกจากแผ่น',
@@ -661,9 +666,9 @@
       modeAuto:'Auto layout', modeFree:'Free layout',
       lblPaperOri:'Paper orientation', btnAddAll:'Add all photos to this sheet', btnAddSheet:'+ Add sheet', btnDelSheet:'Delete this sheet',
       secFreeItem:'Photo on sheet',
-      freeHint:'Click a photo in “Photos” to add it to this sheet · drag = move frame · bottom-right corner = resize · Ctrl+drag = pan photo inside the frame · hold Alt = no snapping',
+      freeHint:'Click a photo in “Photos”, or drag a photo or file straight onto a sheet · drag = move frame · bottom-right corner = resize · Ctrl+drag = pan photo inside the frame · hold Alt = no snapping',
       lblRotFrame:'Rotate frame', btnPan:'Pan photo in frame', panHint:'Or hold Ctrl and drag',
-      freeSheetHint:'Click a photo in the sidebar to place it on this sheet',
+      freeSheetHint:'Drag photos here, or click a photo in the sidebar',
       lblWmm:'Width (mm)', lblHmm:'Height (mm)', lblXmm:'Left X (mm)', lblYmm:'Top Y (mm)',
       lblPreset:'Set frame size', optPresetPick:'Choose a size…', optPresetPage:'Whole printable area',
       btnDup:'Duplicate', btnDelItem:'Remove from sheet',
@@ -1020,12 +1025,16 @@
       var t=document.createElement('div');
       t.className='thumb'+(i===hi?' sel':'');
       t.style.width=tw+'px'; t.style.height=th+'px';
-      t.innerHTML='<img src="'+p.src+'" alt=""><span class="num">'+(i+1)+'</span>'+
+      t.innerHTML='<img src="'+p.src+'" alt="" draggable="false"><span class="num">'+(i+1)+'</span>'+
                   '<button class="x" title="'+T('btnRemove')+'">×</button>';
       t.addEventListener('click',function(e){
+        if(t._dragged){ t._dragged=false; return }        // เพิ่งลากไปวาง ไม่นับเป็นคลิก
         if(e.target.classList.contains('x')){ removePhoto(i); return }
         select(i);
       });
+      // ปิดการลากรูปแบบของเบราว์เซอร์ ไม่งั้นลากไปปล่อยจะกลายเป็นเพิ่มไฟล์รูปซ้ำ
+      t.addEventListener('dragstart',function(e){ e.preventDefault() });
+      attachThumbDrag(t,i);
       strip.appendChild(t);
     });
     if(!photos.length){ el('count').textContent=T('noPhotos'); return }
@@ -1081,11 +1090,12 @@
     syncEditor();
   }
 
-  function addFiles(list){
+  // onDone(รูปที่เพิ่มใหม่) — ใช้ตอนลากไฟล์มาวางบนแผ่นในโหมดวางอิสระ
+  function addFiles(list,onDone){
     var fs=Array.prototype.slice.call(list).filter(function(f){return /^image\//.test(f.type)});
     if(!fs.length){ say(T('noImageFiles')); return }
     say(T('readingFiles',fs.length));
-    var done=0;
+    var done=0, firstId=PID+1;
     fs.forEach(function(f){
       var r=new FileReader();
       r.onload=function(ev){
@@ -1102,6 +1112,7 @@
     function finish(){
       if(++done<fs.length) return;
       if(sel<0&&photos.length) sel=0;
+      if(onDone){ onDone(photos.filter(function(p){ return p.id>=firstId })); return }
       buildSheets(); renderStrip(); syncEditor();
       say(T('addedSummary',photos.length,nSheets()));
     }
@@ -1225,6 +1236,60 @@
     sh.items.push(it); fsel=it;
     buildFree(); renderStrip(); syncEditor();
   }
+  // ---------- ลากรูปมาวางบนแผ่น ----------
+  // จุดบนจอ → แผ่นไหน ตำแหน่งกี่ มม. (null = ไม่ได้อยู่บนแผ่น)
+  function sheetPoint(cx,cy){
+    var t=document.elementFromPoint(cx,cy), sh=t&&t.closest&&t.closest('.sheet');
+    var s=sheetEls.indexOf(sh);
+    if(s<0) return null;
+    var r=sh.getBoundingClientRect(), pp=curPaper();
+    return {s:s, x:(cx-r.left)/r.width*pp.w, y:(cy-r.top)/r.height*pp.h};
+  }
+  function markDropSheet(cx,cy){
+    var at=(MODE==='free'&&cx!=null) ? sheetPoint(cx,cy) : null;
+    sheetEls.forEach(function(sh,i){ sh.classList.toggle('dropon',!!at&&at.s===i) });
+  }
+  // วางรูปให้กึ่งกลางอยู่ตรงจุดที่ปล่อย (k = ลำดับ ใช้เหลื่อมกันทีละ 5 มม. เมื่อวางหลายรูปพร้อมกัน)
+  function placeAt(pid,at,k){
+    var it=newItem(pid);
+    it.x=at.x-it.w/2+(k||0)*5; it.y=at.y-it.h/2+(k||0)*5;
+    clampItem(it);
+    FREE.sheets[at.s].items.push(it); fsel=it; cur=at.s;
+  }
+  // ลาก thumbnail จากแถบรูปภาพ (pointer events → ใช้ได้ทั้งเมาส์และนิ้ว)
+  function attachThumbDrag(t,i){
+    var on=false, moved=false, sx=0, sy=0, ghost=null;
+    t.addEventListener('pointerdown',function(e){
+      if(MODE!=='free'||e.target.classList.contains('x')||e.button>0) return;
+      on=true; moved=false; sx=e.clientX; sy=e.clientY;
+      try{ t.setPointerCapture(e.pointerId) }catch(err){}
+    });
+    t.addEventListener('pointermove',function(e){
+      if(!on) return;
+      if(!moved && Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)<6) return;
+      if(!moved){
+        moved=true;
+        ghost=document.createElement('img'); ghost.className='dragghost'; ghost.src=photos[i].src;
+        document.body.appendChild(ghost);
+      }
+      ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px';
+      markDropSheet(e.clientX,e.clientY);
+    });
+    function end(e,drop){
+      if(!on) return; on=false;
+      try{t.releasePointerCapture(e.pointerId)}catch(err){}
+      if(ghost){ ghost.remove(); ghost=null }
+      markDropSheet();
+      if(!moved) return;                                  // ไม่ได้ลาก = ปล่อยให้เป็นคลิกปกติ
+      t._dragged=true;                                    // กันคลิกที่ตามมาทันทีหลังปล่อย
+      setTimeout(function(){ t._dragged=false },0);
+      var at=drop ? sheetPoint(e.clientX,e.clientY) : null;
+      if(at){ placeAt(photos[i].id,at,0); buildFree(); renderStrip(); syncEditor() }
+    }
+    t.addEventListener('pointerup',function(e){ end(e,true) });
+    t.addEventListener('pointercancel',function(e){ end(e,false) });
+  }
+
   // ดูดติดขอบกระดาษ / ขอบพื้นที่พิมพ์ / กึ่งกลาง / ขอบรูปอื่น (ชิดกัน หรือเว้น GAP)
   function snapPos(it,nx,ny,f){
     var pp=curPaper(), xs=[0,MINM,pp.w-MINM-f.w,pp.w-f.w,(pp.w-f.w)/2],
@@ -1462,9 +1527,18 @@
     window.addEventListener(t,function(e){e.preventDefault();document.body.classList.add('dragging')}) });
   window.addEventListener('dragleave',function(e){
     if(e.relatedTarget===null) document.body.classList.remove('dragging') });
+  window.addEventListener('dragover',function(e){ markDropSheet(e.clientX,e.clientY) });
   window.addEventListener('drop',function(e){
-    e.preventDefault(); document.body.classList.remove('dragging');
-    if(e.dataTransfer&&e.dataTransfer.files.length) addFiles(e.dataTransfer.files) });
+    e.preventDefault(); document.body.classList.remove('dragging'); markDropSheet();
+    if(!(e.dataTransfer&&e.dataTransfer.files.length)) return;
+    // โหมดวางอิสระ + ปล่อยบนแผ่น → เพิ่มรูปแล้ววางตรงจุดที่ปล่อยเลย
+    var at=MODE==='free' ? sheetPoint(e.clientX,e.clientY) : null;
+    if(at) addFiles(e.dataTransfer.files,function(added){
+      added.forEach(function(p,k){ placeAt(p.id,at,k) });
+      buildFree(); renderStrip(); syncEditor();
+    });
+    else addFiles(e.dataTransfer.files);
+  });
   window.addEventListener('paste',function(e){
     var it=(e.clipboardData&&e.clipboardData.items)||[], out=[];
     for(var n=0;n<it.length;n++) if(it[n].type.indexOf('image')===0) out.push(it[n].getAsFile());
