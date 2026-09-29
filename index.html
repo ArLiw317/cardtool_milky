@@ -513,6 +513,8 @@
       <button class="icon" id="prev" data-i18n-title="prevSheet" title="แผ่นก่อนหน้า">‹</button>
       <span class="pagelbl" id="pglabel">แผ่น 1 / 1</span>
       <button class="icon" id="next" data-i18n-title="nextSheet" title="แผ่นถัดไป">›</button>
+      <button class="icon" id="undo" data-i18n-title="undoTitle" title="ย้อนกลับ (Ctrl+Z)" aria-label="ย้อนกลับ" disabled>↶</button>
+      <button class="icon" id="redo" data-i18n-title="redoTitle" title="ทำซ้ำ (Ctrl+Y)" aria-label="ทำซ้ำ" disabled>↷</button>
       <span class="sp"></span>
       <div class="zoomgrp">
         <button class="icon" id="zout" data-i18n-title="zoomOut" title="ซูมออก">−</button>
@@ -588,6 +590,7 @@
       btnJpgAll:'JPG ทุกแผ่น', btnPdfAll:'PDF รวมทุกแผ่น',
       btnJpgOne:'JPG เฉพาะแผ่นนี้', btnPrintDirect:'พิมพ์ปกติ',
       modeAuto:'จัดอัตโนมัติ', modeFree:'วางอิสระ',
+      undoTitle:'ย้อนกลับ (Ctrl+Z)', redoTitle:'ทำซ้ำ (Ctrl+Y)', undone:'ย้อนกลับแล้ว', redone:'ทำซ้ำแล้ว',
       lblPaperOri:'แนวกระดาษ', btnAddAll:'ใส่ทุกรูปลงแผ่นนี้', btnAddSheet:'+ เพิ่มแผ่น', btnDelSheet:'ลบแผ่นนี้',
       secFreeItem:'รูปบนแผ่น',
       freeHint:'คลิกรูปในแถบ “รูปภาพ” หรือลากรูป/ไฟล์มาวางบนแผ่นได้เลย · ลาก = ย้ายกรอบ · ลากมุมขวาล่าง = ปรับขนาด · Ctrl+คลิก = เลือกหลายรูป (Ctrl+A ทั้งแผ่น) · Shift+ลาก = เลื่อนรูปในกรอบ · Alt ค้าง = ไม่ดูดติด',
@@ -710,6 +713,7 @@
       btnJpgAll:'JPG (all sheets)', btnPdfAll:'PDF (all sheets)',
       btnJpgOne:'JPG (this sheet only)', btnPrintDirect:'Quick print',
       modeAuto:'Auto layout', modeFree:'Free layout',
+      undoTitle:'Undo (Ctrl+Z)', redoTitle:'Redo (Ctrl+Y)', undone:'Undone', redone:'Redone',
       lblPaperOri:'Paper orientation', btnAddAll:'Add all photos to this sheet', btnAddSheet:'+ Add sheet', btnDelSheet:'Delete this sheet',
       secFreeItem:'Photo on sheet',
       freeHint:'Click a photo in “Photos”, or drag a photo or file straight onto a sheet · drag = move frame · bottom-right corner = resize · Ctrl+click = select several (Ctrl+A = whole sheet) · Shift+drag = pan photo inside the frame · hold Alt = no snapping',
@@ -1285,8 +1289,9 @@
     el('rv').textContent=p.rot+'°';
     el('tip').hidden = Math.abs(effA(p)*tg.hr-1) < 0.25;
   }
-  function edit(fn){
+  function edit(fn,tag){
     var tg=edTarget(); if(!tg) return;
+    checkpoint(tag);
     if(MODE==='free'){                                   // ปรับทุกชิ้นที่เลือกพร้อมกัน
       selList().forEach(function(it){ var hr=it.h/it.w; fn(it.c,hr); clamp(it.c,hr) });
       renderFreeSel(); syncEditor(); return;
@@ -1348,19 +1353,21 @@
   });
   el('clear').addEventListener('click',function(){
     photos=[]; sel=-1; cur=0; FREE.sheets=[{items:[]}]; setSel(null);
+    UNDO=[]; REDO=[]; histButtons();                       // ล้างรูปหมด = เริ่มประวัติใหม่
     buildSheets(); renderStrip(); syncEditor(); say('') });
   el('prev').addEventListener('click',function(){ if(cur>0){cur--;showSheet();scrollToCurrent()} });
   el('next').addEventListener('click',function(){ if(cur<nSheets()-1){cur++;showSheet();scrollToCurrent()} });
   ['marks','corners','round'].forEach(function(id){ el(id).addEventListener('change',applyToggles) });
   el('z').addEventListener('input',function(){
-    edit(function(p){p.scale=parseInt(el('z').value,10)/100}) });
+    edit(function(p){p.scale=parseInt(el('z').value,10)/100},'zoom') });
   el('rt').addEventListener('input',function(){
-    edit(function(p){p.rot=normDeg(parseInt(el('rt').value,10))}) });
+    edit(function(p){p.rot=normDeg(parseInt(el('rt').value,10))},'angle') });
   el('rt').addEventListener('dblclick',function(){
     edit(function(p){p.rot=0}) });
   document.querySelectorAll('#editor button.mini[data-act]').forEach(function(b){
     b.addEventListener('click',function(){
       var a=b.dataset.act;
+      if(a==='applyall') checkpoint();
       if(a==='rot') edit(function(p){
         p.rot=normDeg(p.rot+parseInt(b.dataset.dir,10)); p.dx=0; p.dy=0; p.scale=1 });
       else if(a==='fill')   edit(function(p){p.scale=1;p.dx=0;p.dy=0});
@@ -1405,6 +1412,56 @@
     if(i>=0){ fsels.splice(i,1); if(fsel===it) fsel=fsels[fsels.length-1]||null }
     else { fsels.push(it); fsel=it }
   }
+
+  // ---------- Undo / Redo — เฉพาะการแก้รูปบนแผ่น ----------
+  // เก็บ: ค่าครอปของทุกรูป + รูปทุกชิ้นบนแผ่นโหมดวางอิสระ (ไม่รวมรายการรูป ขนาด/กระดาษ และโหมด)
+  var UNDO=[], REDO=[], HIST_MAX=50, lastTag='', lastTime=0;
+  function snapState(){
+    var selIdx=[];
+    FREE.sheets.forEach(function(sh,s){ sh.items.forEach(function(it,i){ if(fsels.indexOf(it)>=0) selIdx.push([s,i]) }) });
+    return JSON.stringify({
+      ph:photos.map(function(p){ return {id:p.id,rot:p.rot,scale:p.scale,dx:p.dx,dy:p.dy,cropBy:p.cropBy||null} }),
+      fs:FREE.sheets.map(function(sh){ return sh.items.map(function(it){
+        return {pid:it.pid,x:it.x,y:it.y,w:it.w,h:it.h,c:it.c} }) }),
+      cur:cur, sel:selIdx
+    });
+  }
+  function applyState(str){
+    var o=JSON.parse(str), byId={};
+    o.ph.forEach(function(q){ byId[q.id]=q });
+    photos.forEach(function(p){ var q=byId[p.id]; if(!q) return;
+      p.rot=q.rot; p.scale=q.scale; p.dx=q.dx; p.dy=q.dy; if(q.cropBy) p.cropBy=q.cropBy; else delete p.cropBy });
+    // ชิ้นของรูปที่ถูกลบออกจากแถบไปแล้วจะไม่กลับมา
+    FREE.sheets=o.fs.map(function(items){ return {items:items.filter(function(it){ return photoById(it.pid) })} });
+    if(!FREE.sheets.length) FREE.sheets=[{items:[]}];
+    fsels=[]; fsel=null;
+    o.sel.forEach(function(si){ var sh=FREE.sheets[si[0]], it=sh&&sh.items[si[1]]; if(it){ fsels.push(it); fsel=it } });
+    cur=Math.max(0,Math.min(o.cur,(MODE==='free'?FREE.sheets.length:nSheets())-1));
+    buildSheets(); renderStrip(); syncEditor(); histButtons();
+  }
+  // เรียกก่อนแก้ทุกครั้ง — tag ใช้รวมการแก้ต่อเนื่อง (ลากสไลเดอร์ / กดลูกศรรัวๆ) ให้เป็นครั้งเดียว
+  function checkpoint(tag){
+    var now=Date.now();
+    if(tag && tag===lastTag && now-lastTime<1000){ lastTime=now; return }
+    lastTag=tag||''; lastTime=now;
+    var s=snapState();
+    if(UNDO.length && UNDO[UNDO.length-1]===s) return;
+    UNDO.push(s); if(UNDO.length>HIST_MAX) UNDO.shift();
+    REDO=[]; histButtons();
+  }
+  function histButtons(){ el('undo').disabled=!UNDO.length; el('redo').disabled=!REDO.length }
+  function undo(){
+    if(!UNDO.length) return;
+    var now=snapState(), prev=UNDO.pop();
+    if(prev===now && UNDO.length) prev=UNDO.pop();           // จุดบันทึกที่ยังไม่ได้แก้อะไร ข้ามไป
+    REDO.push(now); lastTag=''; applyState(prev); say(T('undone'));
+  }
+  function redo(){
+    if(!REDO.length) return;
+    UNDO.push(snapState()); lastTag=''; applyState(REDO.pop()); say(T('redone'));
+  }
+  el('undo').addEventListener('click',undo);
+  el('redo').addEventListener('click',redo);
   var FREE={paper:'p46', land:true, sheets:[{items:[]}]};
 
   function curPaper(){
@@ -1463,6 +1520,7 @@
     return false;
   }
   function addItem(i){
+    checkpoint();
     var sh=FREE.sheets[cur], it=newItem(photos[i].id);
     if(!placeOn(sh.items,it)) say(T('noRoom'));
     sh.items.push(it); setSel(it);
@@ -1483,6 +1541,7 @@
   }
   // วางรูปให้กึ่งกลางอยู่ตรงจุดที่ปล่อย (k = ลำดับ ใช้เหลื่อมกันทีละ 5 มม. เมื่อวางหลายรูปพร้อมกัน)
   function placeAt(pid,at,k){
+    if(!k) checkpoint();                                 // วางหลายรูปจากการปล่อยครั้งเดียว = ย้อนครั้งเดียว
     var it=newItem(pid);
     it.x=at.x-it.w/2+(k||0)*5; it.y=at.y-it.h/2+(k||0)*5;
     clampItem(it);
@@ -1606,6 +1665,7 @@
       markPick(); showSheet(); syncEditor(); renderStrip();
       // มุมขวาล่าง = ปรับขนาด · Shift+ลาก หรือปุ่ม “เลื่อนรูปในกรอบ” = เลื่อนรูปข้างใน · ลากปกติ = ย้าย
       mode=e.target.classList.contains('fh') ? 'resize' : (e.shiftKey||fpan) ? 'pan' : 'move';
+      checkpoint();                                      // ถ้าแค่คลิกไม่ได้ลาก จุดนี้จะถูกข้ามตอนกด Undo
       on=true; moved=false; try{ cd.setPointerCapture(e.pointerId) }catch(err){}
       sx=e.clientX; sy=e.clientY; x0=it.x; y0=it.y; f0=fp(it); odx=it.c.dx; ody=it.c.dy;
       grp=selList().map(function(o){ return {it:o,x:o.x,y:o.y,w:o.w,h:o.h} });
@@ -1671,19 +1731,20 @@
       return o.x<MINM-0.05 || o.y<MINM-0.05 || o.x+o.w>pp.w-MINM+0.05 || o.y+o.h>pp.h-MINM+0.05 });
   }
   // แก้ทุกชิ้นที่เลือกพร้อมกัน
-  function freeEdit(fn){
+  function freeEdit(fn,tag){
     var L=selList(); if(!L.length) return;
+    checkpoint(tag);
     L.forEach(function(it){ fn(it); clampItem(it) });
     buildFree(); renderStrip(); syncEditor();
   }
   // ขยับทั้งกลุ่มเท่ากัน (ช่อง X/Y และปุ่มลูกศร) — ไม่ให้ชิ้นไหนหลุดกระดาษ
-  function moveGroup(mx,my){
+  function moveGroup(mx,my,tag){
     var L=selList(), pp=curPaper(); if(!L.length) return;
     L.forEach(function(o){
       mx=Math.max(-o.x,Math.min(pp.w-o.w-o.x,mx));
       my=Math.max(-o.y,Math.min(pp.h-o.h-o.y,my));
     });
-    freeEdit(function(it){ it.x+=mx; it.y+=my });
+    freeEdit(function(it){ it.x+=mx; it.y+=my },tag);
   }
   function numVal(id){ var v=parseFloat(el(id).value); return isFinite(v)?v:null }
   // พิมพ์กว้าง/สูง แยกกันได้ — กรอบเปลี่ยนทรง รูปข้างในจัดตามค่าครอป (เต็มกรอบ/เห็นทั้งรูป)
@@ -1725,6 +1786,7 @@
   // ทำสำเนาทุกชิ้นที่เลือก — สำเนาแต่ละชิ้นหาที่ว่างเอง แล้วกลายเป็นกลุ่มที่เลือกแทน
   el('fDup').addEventListener('click',function(){
     var L=selList(); if(!L.length) return;
+    checkpoint();
     var sh=FREE.sheets[cur], copies=[], full=false;
     L.forEach(function(o){
       var c=copyItem(o); c.x+=5; c.y+=5;
@@ -1737,6 +1799,7 @@
   });
   function delItem(){
     var L=selList(); if(!L.length) return;
+    checkpoint();
     FREE.sheets.forEach(function(sh){ sh.items=sh.items.filter(function(it){ return L.indexOf(it)<0 }) });
     setSel(null); buildFree(); renderStrip(); syncEditor();
   }
@@ -1748,10 +1811,12 @@
   el('fSelAll').addEventListener('click',selectAllSheet);
   el('fDel').addEventListener('click',delItem);
   el('fAddSheet').addEventListener('click',function(){
+    checkpoint();
     FREE.sheets.push({items:[]}); cur=FREE.sheets.length-1; setSel(null);
     buildFree(); renderStrip(); syncEditor(); scrollToCurrent();
   });
   el('fDelSheet').addEventListener('click',function(){
+    checkpoint();
     if(FREE.sheets.length>1) FREE.sheets.splice(cur,1);
     else FREE.sheets[0].items=[];
     setSel(null); buildFree(); renderStrip(); syncEditor();
@@ -1759,6 +1824,7 @@
   // ใส่ทุกรูป: วางต่อกันในที่ว่าง ถ้าแผ่นเต็มเปิดแผ่นใหม่ให้เอง
   el('fAddAll').addEventListener('click',function(){
     if(!photos.length){ say(T('needPhotosFirst')); return }
+    checkpoint();
     photos.forEach(function(p){
       var it=newItem(p.id);
       if(!placeOn(FREE.sheets[cur].items,it)){
@@ -1784,7 +1850,7 @@
     if((e.ctrlKey||e.metaKey)&&(e.key==='a'||e.key==='A')){ e.preventDefault(); selectAllSheet(); return }
     if(!fsel) return;
     var st=e.shiftKey?5:0.5, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
-    if(mv){ e.preventDefault(); moveGroup(mv[0],mv[1]); return }
+    if(mv){ e.preventDefault(); moveGroup(mv[0],mv[1],'nudge'); return }
     if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); delItem() }
   }
   function setMode(m){
@@ -1833,6 +1899,7 @@
     cd.addEventListener('pointerdown',function(e){
       pi=R.p; if(!photos[pi]) return;
       c=cropOf(pi,R.k);
+      checkpoint();
       if(sel!==pi||selK!==R.k){ sel=pi; selK=R.k; renderStrip(); syncEditor(); renderAllCards() }
       var sIdx=+cd.dataset.sheet;
       if(cur!==sIdx){ cur=sIdx; showSheet() }
@@ -2195,6 +2262,13 @@
   pd.addEventListener('click',function(e){ if(e.target===pd) closePrintDlg() });
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'&&!pd.hidden){ closePrintDlg(); return }
+    // Ctrl+Z = ย้อนกลับ · Ctrl+Y / Ctrl+Shift+Z = ทำซ้ำ (ในช่องพิมพ์ ปล่อยให้เป็น undo ตัวอักษรของเบราว์เซอร์)
+    var tg=e.target&&e.target.tagName;
+    if((e.ctrlKey||e.metaKey) && pd.hidden && tg!=='INPUT' && tg!=='TEXTAREA'){
+      var k=(e.key||'').toLowerCase();
+      if(k==='z'&&!e.shiftKey){ e.preventDefault(); undo(); return }
+      if(k==='y'||(k==='z'&&e.shiftKey)){ e.preventDefault(); redo(); return }
+    }
     freeKey(e);
   });
   el('pdBrowser').addEventListener('click',function(){ pd.hidden=true; window.print() });
